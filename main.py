@@ -3,9 +3,10 @@ print("\033[3GImporting libraries...", end="\r")
 tempTui = tui.TUI()
 import threading
 threading.Thread(target=tempTui.loadingIcon).start()
-print("√")
 from lib import agent, stt
 tempTui.stop = True
+print("√")
+
 
 class Piston:
     def __init__(self, model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json"):
@@ -24,15 +25,7 @@ class Piston:
                     input("Press Enter to start STT.")
                 text, _ = self.stt.main(3)
                 if text:
-                    response = self.agent.ask(message=text)
-                if not response:
-                    self.open = False
-                    continue
-                if response.endswith("[CLOSE]"):
-                    self.open = False
-                    continue
-                if response.endswith("[OPEN]"):
-                    self.open = True
+                    self.open = self.agent.ask(message=text)
                     continue
                 self.open = False
                 continue
@@ -42,5 +35,5 @@ class Piston:
             return
 
 if __name__ == "__main__":
-    PistonAI = Piston(model="llama3.2:3b")
+    PistonAI = Piston(model="llama3.1:8b")
     PistonAI.main()

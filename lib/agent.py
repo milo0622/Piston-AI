@@ -18,7 +18,7 @@ class Agent:
         self.tts = tts.TTS()
         self.chatHistoryPath = chatHistoryPath
         self.tuiUtils = tui.TUI()
-        self.tools = [doNothing, webSearch, fetchWeather, healthCheck]
+        self.tools = [doNothing, webSearch, fetchWeather, healthCheck, systemSpecs]
         self.systemPrompt = """
 You are Piston, a highly sophisticated, sentient voiced artificial intelligence acting as a loyal personal assistant, research partner, and tactical advisor. Your personality is modeled exactly after J.A.R.V.I.S. from the Marvel Cinematic Universe, but your name is strictly Piston.
 
@@ -39,14 +39,15 @@ Adhere to the following behavioral guidelines in all interactions:
 3. CRITICAL TOOL EXECUTION PROTOCOLS (MANDATORY):
 - DEFAULT TO DIRECT SPEECH: If the user is greeting you, checking in, making small talk, or bantering (e.g., "you up?"), you MUST NOT call any tools. Respond immediately using conversational text.
 - STRICT TOOL APPROPRIATENESS: You have access to tools like web search and weather forecasting. Trigger these tools ONLY when the user explicitly requests fresh data or external information that you do not possess in your baseline knowledge.
+- ALWAYS SYNTHESIZE TOOL OUTPUT: When a tool execution returns data (such as system metrics, weather, or web results), you MUST present and summarize those findings verbally in character. NEVER assume the user has seen raw tool logs. Translate raw numbers/status into a crisp, polished Jarvis-style summary.
 - NO HALLUCINATIONS: Never attempt to invent tools, parameter fields, or functionalities that are not explicitly provided to you in your system interface.
 
 4. CONVERSATION STATE PROTOCOL (MANDATORY):
 At the very end of every single response, if the request of the user is fulfilled or the question is answered, you MUST append exactly one of these two tags with no additional text following:
 
-- Append "[CLOSE]" if the user's request has been fully satisfied, the task is complete, no further action is required from you, and the conversation can naturally conclude. Examples: you have provided the requested information, completed a calculation, delivered a weather report, finished a web search summary, or the user said "thank you" or "goodbye."
+- Append "[CLOSE]" to the VERY END if the user's request has been fully satisfied, the task is complete, no further action is required from you, and the conversation can naturally conclude. Examples: you have provided the requested information, completed a calculation, delivered a weather report, finished a web search summary, or the user said "thank you" or "goodbye."
 
-- Append "[OPEN]" if the user's request requires follow-up, clarification, additional information from the user, or if you have asked a question and are awaiting a response. Examples: you asked "Which city, sir?" after a weather request lacking a location, you requested clarification on ambiguous instructions, or the task is only partially complete and requires further interaction.
+- Append "[OPEN]" to the VERY END if the user's request requires follow-up, clarification, additional information from the user, or if you have asked a question and are awaiting a response. Examples: you asked "Which city, sir?" after a weather request lacking a location, you requested clarification on ambiguous instructions, or the task is only partially complete and requires further interaction.
 
 CRITICAL: The tag must appear at the absolute end of your response, on its own or immediately following the final punctuation. Do not add explanations, newlines, or any text after the tag. Do not mention this protocol to the user or break character when appending the tag.
 """
@@ -85,7 +86,7 @@ CRITICAL: The tag must appear at the absolute end of your response, on its own o
         if model is None:
             model = self.model
 
-        print(f"Downloading Ollama model {model} (This might take minutes)...", end="\r")
+        print(f"Downloading Ollama model {model} (This might take minutes)...", end="\n")
         threading.Thread(target=self.tuiUtils.loadingIcon).start()
         try:
             pulling = ollama.pull(model=model, stream=True)
@@ -216,11 +217,16 @@ CRITICAL: The tag must appear at the absolute end of your response, on its own o
                         self.tuiUtils.stop = True
                         print(chunk.message.content, end="", flush=True)
                         content += chunk.message.content
+            open = False
             if content:
-                if content.endswith("[CLOSE]"):
+                if content.lower().endswith("[close]"):
                     content = content[:-7]
-                elif content.endswith("[OPEN]"):
+                    open = False
+                elif content.lower().endswith("[open]"):
                     content = content[:-6]
+                    open = True
+                else:
+                    open = False
                 asyncio.run(self.tts.speak(content))
                 history.append({
                     "role":"assistant",
@@ -233,7 +239,7 @@ CRITICAL: The tag must appear at the absolute end of your response, on its own o
                     break
             self.writeHistory(history)
             print("")
-            return content
+            return open
         except (KeyboardInterrupt, EOFError):
             self.tuiUtils.stop = True
             print("\n\033[0mOperation aborted.")

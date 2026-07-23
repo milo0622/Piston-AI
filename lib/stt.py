@@ -25,7 +25,7 @@ class STT:
 
         threading.Thread(target=self.tui.loadingIcon).start()
         print("\033[3GLoading model...", end="\r")
-        self.model = WhisperModel("tiny.en", device="cpu", compute_type="int8")
+        self.model = WhisperModel("base.en", device="cpu", compute_type="int8")
         print("\033[2K√ Model loaded.")
         self.tui.stop = True
 
