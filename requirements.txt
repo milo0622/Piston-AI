@@ -1,9 +1,8 @@
-openai
-sounddevice
-numpy
-faster-whisper
+ollama
 requests
-geocoder
-ddgs
-nemo_text_processing
-gladia-normalization
+piper
+sounddevice
+soundfile
+numpy
+faster_whisper
+psutil

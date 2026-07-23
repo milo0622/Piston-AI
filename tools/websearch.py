@@ -1,18 +1,24 @@
 from ddgs import DDGS
-import json
 
-def websearch(query:str="") -> str:
-    try:
-        with DDGS() as ddgs:
-            results = [item for item in ddgs.text(query, max_results=5)]
-            return json.dumps(results)
-    except Exception as e:
-        return json.dumps({"error":f"Failed to perform websearch: {str(e)}"})
+class WebSearch:
+    def __init__(self, query):
+        self.query = query  
     
-if __name__ == "__main__":
-    while True:
-        uInput = input("Search query: ")
-        if not uInput:
-            continue
-        results = websearch(query=uInput)
-        print(results)
+    def search(self):
+        result = None
+        with DDGS() as ddgs:
+            result = ddgs.text(self.query, max_results=5)
+        if result is None:
+            return []
+        return result
+    
+def webSearch(query):
+    """This tool is capable of fetching real-time data in the world.
+    Args:
+    query (str): The keyword/query to be searched
+    """
+    print(f"Searching the web: {query}")
+    search = WebSearch(query)
+    result = search.search()
+    return result
+    

@@ -1,2 +1,5 @@
-.vscode/
-Piston\ frontend/.build.sh
+venv/
+.vscode
+**/__pycache__
+userdata/
+voices/
