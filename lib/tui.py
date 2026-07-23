@@ -5,7 +5,7 @@ class TUI:
         self.loadingSpeed = loadingSpeed
         self.stop = False
     def loadingIcon(self):
-        icons = ["/", "-", "\\", "|"]
+        icons = ["⠋", "⠙", "⠚", "⠞", "⠖", "⠦", "⠧", "⠇"]
         while True:
             try:
                 for icon in icons:

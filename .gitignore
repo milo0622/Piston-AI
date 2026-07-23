@@ -1,5 +1,6 @@
 venv/
-.vscode
+.vscode/
 **/__pycache__
 userdata/
 voices/
+.DS_STORE
