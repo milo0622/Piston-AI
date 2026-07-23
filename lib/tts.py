@@ -46,7 +46,7 @@ class TTS:
 
         if not Path(self.config).exists():
             try:
-                Path(self.voice).unlink(missing_ok=True)
+                Path(self.config).unlink(missing_ok=True)
                 print("\033[3GPulling TTS config...")
                 threading.Thread(target=self.tui.loadingIcon).start()
                 url = "https://raw.githubusercontent.com/cklam12345/jarvis_llama/main/jarvis.onnx.json"

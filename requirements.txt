@@ -6,3 +6,6 @@ soundfile
 numpy
 faster_whisper
 psutil
+ddgs
+geocoder
+piper-tts
