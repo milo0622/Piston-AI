@@ -29,6 +29,7 @@ class STT:
         print("\033[2K√ Model loaded.")
         self.tui.stop = True
 
+
     def audioWorker(self):
         try:
             with sd.InputStream(samplerate=self.SAMPLE_RATE, channels=1, dtype="float32") as stream:

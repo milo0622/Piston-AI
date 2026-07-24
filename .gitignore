@@ -4,3 +4,4 @@ venv/
 userdata/
 voices/
 .DS_STORE
+wakeword model/

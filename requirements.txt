@@ -9,3 +9,5 @@ psutil
 ddgs
 geocoder
 piper-tts
+openwakeword
+PyAudio
