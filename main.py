@@ -37,7 +37,7 @@ class Piston:
                     if not self.wakewordSuccess:
                         input("Press Enter to start STT.")
                     else:
-                        print("Listening for wakeword (Hey Piston)...")
+                        print("\nListening for wakeword (Hey Piston)...")
                         self.wakeword.listenForWake()
                 text, _ = self.stt.main(3)
                 if text:

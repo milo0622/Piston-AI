@@ -3,9 +3,9 @@ import geocoder
 
 class Weather:
     def __init__(self):
+        self.city = None
         self.lat, self.lon = self.fetchLocation()
         self.url = "https://api.open-meteo.com/v1/forecast"
-        self.city = None
 
     def fetchLocation(self):
         g = geocoder.ip("me")
