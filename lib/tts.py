@@ -10,6 +10,7 @@ import threading
 import requests
 from piper import PiperVoice, SynthesisConfig
 import asyncio
+import time
 
 class TTS:
     def __init__(self, voiceDir="voices/"):
@@ -21,6 +22,8 @@ class TTS:
         self.voice = None
         self.checkModels()
         self.loadModel()
+
+        self.reading = False
 
     def checkModels(self):
         Path(os.path.dirname(self.voiceDir)).mkdir(exist_ok=True, parents=True)
@@ -72,11 +75,15 @@ class TTS:
         print("\r√")
 
     async def speak(self, text:str) -> None:
+        while self.reading:
+            time.sleep(0.1)
+
         if self.model is None:
             print("Please load model first.")
         try:
             if not text.strip():
                 return
+            self.reading = True
             SynConfig = SynthesisConfig(
                 volume=1.0,
                 length_scale=0.8
@@ -90,8 +97,10 @@ class TTS:
                     stream.write(chunk.audio_int16_array)
 
                 stream.stop()
+                self.reading = True
         except Exception as e:
             print(f"Failed to synthsize: {e}")
+            self.reading = False
 
 if __name__ == "__main__":
     tts = TTS()

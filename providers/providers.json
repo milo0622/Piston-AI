@@ -1,0 +1,8 @@
+{
+    "ollama":{
+        "api":"ollama",
+        "baseURLENV":"OLLAMA_HOST",
+        "fallback":"http://localhost:11434",
+        "endpoint":"/v1"
+    }
+}

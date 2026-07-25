@@ -5,9 +5,14 @@ class Weather:
     def __init__(self):
         self.lat, self.lon = self.fetchLocation()
         self.url = "https://api.open-meteo.com/v1/forecast"
+        self.city = None
 
     def fetchLocation(self):
         g = geocoder.ip("me")
+        if g.city:
+            self.city = g.city
+        else:
+            self.city = None
         if g.latlng:
             return g.latlng
     
@@ -28,6 +33,7 @@ class Weather:
         if response.status_code == 200:
             data = response.json()
             current_weather = data["current"]
+            current_weather["city"] = self.city
             return current_weather
         else:
             return f"Failed to fetch weather. Error code: {response.status_code}"

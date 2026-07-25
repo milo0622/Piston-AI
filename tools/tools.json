@@ -1,0 +1,35 @@
+[
+    {
+        "type":"function",
+        "function":{
+            "name":"fetchWeather",
+            "description":"Fetches real-time weather. No parameters should be provided.", 
+            "parameters":{
+                "type":"object",
+                "properties": {}
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"healthCheck",
+            "description":"Performs a health and status check on the status, including CPU usage, memory usage, battery health, etc.", 
+            "parameters":{
+                "type":"object",
+                "properties": {}
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"systemSpecs",
+            "description":"Returns the specifications of the current system, including OS, CPU mode, memory size, etc.", 
+            "parameters":{
+                "type":"object",
+                "properties": {}
+            }
+        }
+    }
+]
