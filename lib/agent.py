@@ -5,7 +5,6 @@ from lib import tui
 import threading
 from tools.fetchWeather import *
 from tools.websearch import *
-from tools.normal import *
 from tools.systemChecks import *
 from lib import tts
 import asyncio
