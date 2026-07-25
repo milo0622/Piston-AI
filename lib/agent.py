@@ -153,6 +153,7 @@ class Agent:
 
     def ask(self, message):
         try:
+            open = None
             self.fetchSystemPrompt()
             messages = self.readHistory()
             messages.insert(0, {
@@ -177,6 +178,12 @@ class Agent:
                     self.tui.stop = True
                     toolCalls.append(chunk.choices[0].delta.tool_calls[0])
             if content:
+                if content.lower().endswith("[open]"):
+                    content = content[:-6]
+                    open = True
+                elif content.lower().endswith("[close]"):
+                    content = content[:-7]
+                    open = False
                 asyncio.run(self.tts.speak(content))
             payload = {
                 "role":"assistant",
@@ -219,12 +226,19 @@ class Agent:
                         print(chunk.choices[0].delta.content, end="")
                         content += chunk.choices[0].delta.content
                 if content:
+                    if content.lower().endswith("[open]"):
+                        content = content[:-6]
+                        open = True
+                    elif content.lower().endswith("[close]"):
+                        content = content[:-7]
+                        open = False
                     asyncio.run(self.tts.speak(content))
                     messages.append({
                         "role":"assistant",
                         "content":content
                     })
             self.writeHistory(messages=messages)
+            return open
         except Exception as e:
             self.tui.stop = True
             if e in (KeyboardInterrupt, EOFError):
