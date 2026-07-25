@@ -71,6 +71,7 @@ class Wakeword:
 
                 scores = self.model.prediction_buffer[self.modelName]
                 currentScore = scores[-1]
+                print(currentScore)
                 if currentScore >= self.threshold:
                     print(f"Wakeword triggered, score: {currentScore}")
                     self.model.reset()
