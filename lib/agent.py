@@ -15,6 +15,7 @@ import copy
 import importlib
 import asyncio
 import inspect
+from lib.puller import *
 
 class Agent:
     def __init__(self, providers:str="providers/providers.json", model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json", toolPath="tools/tools.json"):
@@ -52,20 +53,22 @@ class Agent:
         self.fetchSystemPrompt()
 
     def checkProviders(self):
+        url = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/providers/providers.json"
+        output = "providers/providers.json"
         Path(os.path.dirname(Path(self.providersPath).resolve())).mkdir(parents=True, exist_ok=True)
         Path(os.path.dirname(Path("userdata/config.json").resolve())).mkdir(parents=True, exist_ok=True)
         if not Path(self.providersPath).exists():
-            with open(self.providersPath, "w") as f:
-                json.dump(self.defProviders, f, indent=4)
-            self.providers = copy.deepcopy(self.defProviders)
+            Puller(url=url, outputPath=output).pull()
+            with open(output, "r") as f:
+                self.providers = json.load(f)
         else:
             with open(self.providersPath, "r") as f:
                 try:
                     self.providers = json.load(f)
                 except json.JSONDecodeError:
-                    with open(self.providersPath, "w") as f:
-                        json.dump(self.providers, f, indent=4)
-                    self.providers = copy.deepcopy(self.defProviders)
+                    Puller(url=url, outputPath=output).pull()
+                    with open(output, "r") as f:
+                        self.providers = json.load(f)
         defaultConfig = {
             "provider":"ollama"
         }
@@ -119,9 +122,13 @@ class Agent:
             return []
 
     def fetchTools(self):
+        url = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/tools/tools.json"
+        outputPath = "tools/tools.json"
         Path(Path(os.path.dirname(self.toolPath)).resolve()).mkdir(parents=True, exist_ok=True)
 
         try:
+            if not Path(self.toolPath).exists():
+                Puller(url=url, outputPath=outputPath).pull()
             with open(self.toolPath, "r") as f:
                 self.tools:list[dict] = json.load(f)
         except (json.JSONDecodeError, FileNotFoundError) as e:
@@ -132,10 +139,17 @@ class Agent:
 
     def fetchSystemPrompt(self):
         sysPromptPath = "lib/systemPrompt.txt"
+        url = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/lib/systemPrompt.txt"
         Path(os.path.dirname(sysPromptPath)).mkdir(parents=True, exist_ok=True)
 
-        if not Path(sysPromptPath).exists():
-            with open("")
+        try:
+            if not Path(sysPromptPath).exists():
+                Puller(url, outputPath=sysPromptPath).pull()
+            with open(sysPromptPath, "r") as f:
+                self.systemPrompt = f.read()
+        except Exception as e:
+            print("Failed to obtain system prompt: {e}")
+            self.systemPrompt = """"""
 
     def ask(self, message):
         try:

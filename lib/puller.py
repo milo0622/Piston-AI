@@ -17,10 +17,11 @@ class Puller:
             print(f"\033[3GDownloading file from {self.url}, output path: {self.out}")
             with requests.get(self.url, stream=True) as response:
                 response.raise_for_status()
-                with open(self.output, "wb") as f:
+                with open(self.out, "wb") as f:
                     for chunk in response.iter_content(chunk_size=4096):
                         if chunk:
                             f.write(chunk)
+            self.tui.stop = True
         except (KeyboardInterrupt, EOFError):
             self.tui.stop = True
             print(f"Operation aborted.")

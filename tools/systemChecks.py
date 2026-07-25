@@ -1,5 +1,6 @@
 import psutil
 import json
+import socket
 import platform
 
 class SystemHealthCheck:
@@ -16,6 +17,17 @@ class SystemHealthCheck:
         self.cpuModel = platform.processor()
         self.system = platform.system()
 
+        self.connectivity = self.checkConnectivity()
+
+    def checkConnectivity(self):
+        try:
+            socket.setdefaulttimeout(3)
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.connect(("8.8.8.8", 53))
+            return True
+        except (socket.timeout, OSError):
+            return False
+
     def checkHealth(self):
         payload = {
             "OS": "macOS" if self.system == "Darwin" else self.system,
@@ -23,7 +35,8 @@ class SystemHealthCheck:
             "Memory Usage": f"{self.memUsage.percent}%" if self.memUsage else "N/A",
             "Swap Usage": f"{self.swapUsage.percent}%" if self.swapUsage else "N/A",
             "Disk usage": f"{self.diskUsage.percent}%" if self.diskUsage else "N/A",
-            "Battery": f"{self.batteryHealth.percent}%, {'Charging' if self.batteryHealth.power_plugged else 'Not plugged in'}" if self.batteryHealth is not None else "No battery detected on this system"
+            "Battery": f"{self.batteryHealth.percent}%, {'Charging' if self.batteryHealth.power_plugged else 'Not plugged in'}" if self.batteryHealth is not None else "No battery detected on this system",
+            "Connectivity": "Successful connection to 8.8.8.8" if self.connectivity else "Connection failure to 8.8.8.8"
         }
         return payload
 
