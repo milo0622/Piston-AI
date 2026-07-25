@@ -153,6 +153,7 @@ class Agent:
 
     def ask(self, message):
         try:
+            self.fetchSystemPrompt()
             messages = self.readHistory()
             messages.insert(0, {
                 "role":"system",
