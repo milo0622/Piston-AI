@@ -21,7 +21,7 @@ class Piston:
         self.tui.stop = True
         print("√")
         self.stt = stt.STT()
-        self.wakeword = wakeword.Wakeword(threshold=0.6)
+        self.wakeword = wakeword.Wakeword(threshold=0.5)
         if not self.wakeword.loadModel:
             print("Failed to load wakeword. Fallback to manual mode.")
             self.wakewordSuccess = False
@@ -54,5 +54,5 @@ class Piston:
             return
 
 if __name__ == "__main__":
-    PistonAI = Piston(model="llama3.1:8b")
+    PistonAI = Piston(model="qwen3.5")
     PistonAI.main()

@@ -13,7 +13,7 @@ def main():
         chatPath = "userdata/chats/fallback.json"
     tuiUtils = tui.TUI()
     threading.Thread(target=tuiUtils.loadingIcon).start()
-    mainAgent = agent.Agent(chatHistoryPath=chatPath, model="llama3.1:8b")
+    mainAgent = agent.Agent(chatHistoryPath=chatPath, model="llama3.2:3b")
     tuiUtils.stop = True
     print("", end="", flush=True)
 

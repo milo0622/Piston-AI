@@ -10,7 +10,6 @@ from lib import tts
 import asyncio
 import os
 from pathlib import Path
-import copy
 import importlib
 import asyncio
 import inspect
@@ -18,20 +17,6 @@ from lib.puller import *
 
 class Agent:
     def __init__(self, providers:str="providers/providers.json", model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json", toolPath="tools/tools.json"):
-        self.defProviders = {
-            "ollama":{
-                "api":"ollama",
-                "baseURLENV":"OLLAMA_HOST",
-                "fallback":"http://localhost:11434",
-                "endpoint":"/v1"
-            },
-            "lmstudio":{
-                "api":"lmstudio",
-                "baseURLENV":"LMSTUDIO_BASE_URL",
-                "fallback":"http://localhost:1234",
-                "endpoint":"/v1"
-            }
-        }
         self.providersPath = providers
         self.providers = None
         self.provider = "ollama"
@@ -99,7 +84,13 @@ class Agent:
     def verifyHistoryPath(self):
         if not self.chatHistoryPath.strip():
             self.chatHistoryPath = "userdata/chats/fallback.json"
-        
+        Path(os.path.dirname(self.chatHistoryPath)).mkdir(parents=True, exist_ok=True)
+        try:
+            with open(self.chatHistoryPath, "r") as f:
+                json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            with open(self.chatHistoryPath, "w") as f:
+                json.dump([], f, indent=4)
 
     def writeHistory(self, messages:list[dict]):
         for message in messages:
@@ -111,6 +102,7 @@ class Agent:
             json.dump(messages, f, indent=4)
 
     def readHistory(self):
+        self.verifyHistoryPath()
         try:
             with open(self.chatHistoryPath, "r") as f:
                 messages = json.load(f)
@@ -170,7 +162,7 @@ class Agent:
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     self.tui.stop = True
-                    print(chunk.choices[0].delta.content, end="")
+                    print(chunk.choices[0].delta.content, end="", flush=True)
                     content += chunk.choices[0].delta.content
                 
                 if chunk.choices[0].delta.tool_calls:
@@ -222,7 +214,7 @@ class Agent:
                 for chunk in stream:
                     if chunk.choices[0].delta.content:
                         self.tui.stop = True
-                        print(chunk.choices[0].delta.content, end="")
+                        print(chunk.choices[0].delta.content, end="", flush=True)
                         content += chunk.choices[0].delta.content
                 if content:
                     if content.lower().endswith("[open]"):
