@@ -5,15 +5,18 @@ import threading
 threading.Thread(target=tempTui.loadingIcon).start()
 from lib import agent, stt, wakeword, SFX
 from pathlib import Path
+import json
+import os
+import sys
 tempTui.stop = True
 print("√")
 
-
 class Piston:
-    def __init__(self, model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json"):
+    def __init__(self, chatHistoryPath="userdata/chats/fallback.json"):
         print("\033[3GInit...", end="\r")
         self.tui = tui.TUI()
-        self.agent = agent.Agent(model=model, chatHistoryPath=chatHistoryPath)
+        self.model = modelID()
+        self.agent = agent.Agent(chatHistoryPath=chatHistoryPath, model=self.model)
         soundfiles = ["assets/startup.mp3", "assets/startSTT.mp3", "assets/stopSTT.mp3"]
         for idx, soundfile in enumerate(soundfiles):
             soundfiles[idx] = Path(soundfile).resolve()
@@ -30,6 +33,7 @@ class Piston:
         self.open = False
         self.sfx.playSound(0, blocking=True)
 
+            
     def main(self):
         print("Welcome to Piston AI!")
         try:
@@ -51,8 +55,35 @@ class Piston:
         except (KeyboardInterrupt, EOFError):
             self.tui.stop = True
             print("Bye!")
-            return
+            sys.exit()
 
+def modelID():
+    filePath = "userdata/config.json"
+    default = {
+        "provider":"ollama",
+        "model":"gemma:e4b"
+    }
+    Path(os.path.dirname(filePath)).mkdir(parents=True, exist_ok=True)
+    if not Path(filePath).exists():
+        with open(filePath, "w") as f:
+            json.dump(default, f, indent=4)
+        file = default
+    else:
+        try:
+            with open(filePath, "r") as f:
+                file = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            with open(filePath, "w") as f:
+                json.dump(default, f, indent=4)
+            file = default
+        except (KeyboardInterrupt, EOFError):
+            print("Operation aborted.")
+            sys.exit()
+    if file:
+        model = file.get("model")
+    else:
+        model = "gemma:e4b"
+    return model
 if __name__ == "__main__":
-    PistonAI = Piston(model="gemma4:e4b")
+    PistonAI = Piston()
     PistonAI.main()

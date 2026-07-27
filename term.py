@@ -4,6 +4,7 @@ from pathlib import Path
 import readline
 from lib import tui
 import threading
+from main import *
 
 args = sys.argv[1:]
 def main():
@@ -13,7 +14,8 @@ def main():
         chatPath = "userdata/chats/fallback.json"
     tuiUtils = tui.TUI()
     threading.Thread(target=tuiUtils.loadingIcon).start()
-    mainAgent = agent.Agent(chatHistoryPath=chatPath, model="gemma:e4b")
+    model = modelID()
+    mainAgent = agent.Agent(chatHistoryPath=chatPath, model=model)
     tuiUtils.stop = True
     print("", end="", flush=True)
 
