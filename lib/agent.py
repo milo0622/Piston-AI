@@ -7,6 +7,7 @@ from tools.fetchWeather import *
 from tools.websearch import *
 from tools.systemChecks import *
 from tools.clipboardTools import *
+from tools.YouTubeTools import *
 from lib import tts
 import asyncio
 import os
@@ -197,6 +198,7 @@ class Agent:
             }
             messages.append(payload)
             if toolCalls:
+                print()
                 toolCallResults = []
                 for call in toolCalls:
                     messages[-1]["tool_calls"].append({
