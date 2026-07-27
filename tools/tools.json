@@ -98,5 +98,22 @@
                 "required":["query"]
             }
         }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"webSearch",
+            "description":"Searches the web for real-time data", 
+            "parameters":{
+                "type":"object",
+                "properties": {
+                    "query":{
+                        "type":"string",
+                        "description":"The search query for the target data"
+                    }
+                },
+                "required":["query"]
+            }
+        }
     }
 ]

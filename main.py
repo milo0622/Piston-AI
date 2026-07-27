@@ -11,7 +11,9 @@ import sys
 tempTui.stop = True
 print("√")
 
-class Piston:
+args = sys.argv[1:]
+
+class Piston:   
     def __init__(self, chatHistoryPath="userdata/chats/fallback.json"):
         print("\033[3GInit...", end="\r")
         self.tui = tui.TUI()
@@ -24,12 +26,15 @@ class Piston:
         self.tui.stop = True
         print("√")
         self.stt = stt.STT()
-        self.wakeword = wakeword.Wakeword(threshold=0.5)
+        self.wakeword = wakeword.Wakeword(threshold=0.67)
         if not self.wakeword.loadModel:
             print("Failed to load wakeword. Fallback to manual mode.")
             self.wakewordSuccess = False
         else:
             self.wakewordSuccess = True
+        if "-m" in args:
+            print("Manual mode enabled.")
+            self.wakewordSuccess = False
         self.open = False
         self.sfx.playSound(0, blocking=True)
 
@@ -48,7 +53,13 @@ class Piston:
                 text, _ = self.stt.main(3)
                 self.sfx.playSound(2, blocking=False)
                 if text.strip().rstrip():
-                    self.open = self.agent.ask(message=text)
+                    try:
+                        self.open = self.agent.ask(message=text)
+                        print()
+                    except (KeyboardInterrupt, EOFError):
+                        self.agent.tui.stop = True
+                        print("Operation aborted")
+                        continue
                     continue
                 self.open = False
                 continue
@@ -61,7 +72,7 @@ def modelID():
     filePath = "userdata/config.json"
     default = {
         "provider":"ollama",
-        "model":"gemma:e4b"
+        "model":"gemma4:e4b"
     }
     Path(os.path.dirname(filePath)).mkdir(parents=True, exist_ok=True)
     if not Path(filePath).exists():

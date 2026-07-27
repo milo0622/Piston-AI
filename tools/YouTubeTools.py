@@ -12,7 +12,7 @@ class YouTubeTools:
         if searchParams.startswith("https://") and searchParams.startswith("http://"):
             self.query = searchParams
         else:
-            self.query = f"ytsearch1:{searchParams}"
+            self.query = f"ytsearch:{searchParams}"
 
     def extractInfo(self):
         print(f"Searching song '{self.query}'")
