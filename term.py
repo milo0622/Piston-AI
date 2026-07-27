@@ -13,7 +13,7 @@ def main():
         chatPath = "userdata/chats/fallback.json"
     tuiUtils = tui.TUI()
     threading.Thread(target=tuiUtils.loadingIcon).start()
-    mainAgent = agent.Agent(chatHistoryPath=chatPath, model="gemma4:latest")
+    mainAgent = agent.Agent(chatHistoryPath=chatPath, model="gemma:e4b")
     tuiUtils.stop = True
     print("", end="", flush=True)
 

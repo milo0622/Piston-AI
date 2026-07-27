@@ -37,8 +37,9 @@ class YouTubeTools:
         song = self.extractInfo()
         if song.get("title", "") and song.get("streamURL", ""):
             url = song.get("streamURL", "")
-            url.replace("www.youtube.com", "music.youtube.com")
-            url.replace("youtube.com", "music.youtube.com")
+            url = url.replace("www.youtube.com", "music.youtube.com")
+            if not "music.youtube.com" in url:
+                url = url.replace("youtube.com", "music.youtube.com")
             print(url)
             webbrowser.open(url)
             return {

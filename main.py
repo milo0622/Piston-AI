@@ -43,7 +43,7 @@ class Piston:
                 self.sfx.playSound(1, blocking=False)
                 text, _ = self.stt.main(3)
                 self.sfx.playSound(2, blocking=False)
-                if text:
+                if text.strip().rstrip():
                     self.open = self.agent.ask(message=text)
                     continue
                 self.open = False
@@ -54,5 +54,5 @@ class Piston:
             return
 
 if __name__ == "__main__":
-    PistonAI = Piston(model="qwen3.5")
+    PistonAI = Piston(model="gemma4:e4b")
     PistonAI.main()

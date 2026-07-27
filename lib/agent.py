@@ -160,83 +160,30 @@ class Agent:
                 "content":message
             })
             threading.Thread(target=self.tui.loadingIcon).start()
-            stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, tool_choice="auto")
-            loading = True
-            content = ""
-            toolCalls = []
-            for chunk in stream:
-                if hasattr(chunk.choices[0].delta, "reasoning_content") and chunk.choices[0].delta.reasoning_content:
-                    if loading:
-                        print("Thinking:")
-                        self.tui.stop = True
-                        thinking = True
-                        loading = False
-                    print(chunk.choices[0].delta.reasoning_content, end="", flush=True)
-                if chunk.choices[0].delta.content:
-                    if thinking:
-                        thinking = False
-                        print("")
-                    self.tui.stop = True
-                    print(chunk.choices[0].delta.content, end="", flush=True)
-                    content += chunk.choices[0].delta.content
-                
-                if chunk.choices[0].delta.tool_calls:
-                    self.tui.stop = True
-                    toolCalls.append(chunk.choices[0].delta.tool_calls[0])
-            if content:
-                if content.lower().endswith("[open]"):
-                    content = content[:-6]
-                    open = True
-                elif content.lower().endswith("[close]"):
-                    content = content[:-7]
-                    open = False
-                self.tts.speak(content)
-            payload = {
-                "role":"assistant",
-                "content": None if not content else content,
-                "tool_calls":[] if toolCalls else None
-            }
-            messages.append(payload)
-            if toolCalls:
-                print()
-                toolCallResults = []
-                for call in toolCalls:
-                    messages[-1]["tool_calls"].append({
-                        "id":call.id,
-                        "type":call.type,
-                        "function":{
-                            "name":call.function.name,
-                            "arguments": call.function.arguments
-                        }
-                    })
-                    execution = globals().get(call.function.name, None)
-                    if not execution:
-                        toolCallResults.append({
-                            "role":"tool",
-                            "tool_call_id":call.id,
-                            "content": json.dump({"status":"Failed", "content":"Function not found", })
-                        })
-                        continue
-                    availableParameters = inspect.signature(execution).parameters.values()
-                    argumentCalls = json.loads(call.function.arguments)
-                    if len(availableParameters) > 0:
-                        result = execution(**argumentCalls)
-                    else:
-                        result = execution()
-                    toolCallResults.append({
-                        "role":"tool",
-                        "tool_call_id":call.id,
-                        "content":json.dumps(result) if isinstance(result, (dict, list)) else result
-                    })
-                messages.extend(toolCallResults)
-                threading.Thread(target=self.tui.loadingIcon).start()
-                stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, tool_choice="auto")
+            while True:
+                stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, tool_choice="auto", max_tokens=1000)
+                loading = True
                 content = ""
+                toolCalls = []
                 for chunk in stream:
+                    if hasattr(chunk.choices[0].delta, "reasoning_content") and chunk.choices[0].delta.reasoning_content:
+                        if loading:
+                            print("Thinking:")
+                            self.tui.stop = True
+                            thinking = True
+                            loading = False
+                        print(chunk.choices[0].delta.reasoning_content, end="", flush=True)
                     if chunk.choices[0].delta.content:
+                        thinking = False
+                        if thinking:
+                            print("")
                         self.tui.stop = True
                         print(chunk.choices[0].delta.content, end="", flush=True)
                         content += chunk.choices[0].delta.content
+                    
+                    if chunk.choices[0].delta.tool_calls:
+                        self.tui.stop = True
+                        toolCalls.append(chunk.choices[0].delta.tool_calls[0])
                 if content:
                     if content.lower().endswith("[open]"):
                         content = content[:-6]
@@ -244,13 +191,48 @@ class Agent:
                     elif content.lower().endswith("[close]"):
                         content = content[:-7]
                         open = False
-                    messages.append({
-                        "role":"assistant",
-                        "content":content
-                    })
                     self.tts.speak(content)
-            self.writeHistory(messages=messages)
-            return open
+                payload = {
+                    "role":"assistant",
+                    "content": None if not content else content,
+                    "tool_calls":[] if toolCalls else None
+                }
+                messages.append(payload)
+                if content:
+                    self.writeHistory(messages=messages)
+                    return open
+                if toolCalls:
+                    print()
+                    toolCallResults = []
+                    for call in toolCalls:
+                        messages[-1]["tool_calls"].append({
+                            "id":call.id,
+                            "type":call.type,
+                            "function":{
+                                "name":call.function.name,
+                                "arguments": call.function.arguments
+                            }
+                        })
+                        execution = globals().get(call.function.name, None)
+                        if not execution:
+                            toolCallResults.append({
+                                "role":"tool",
+                                "tool_call_id":call.id,
+                                "content": json.dump({"status":"Failed", "content":"Function not found", })
+                            })
+                            continue
+                        availableParameters = inspect.signature(execution).parameters.values()
+                        argumentCalls = json.loads(call.function.arguments)
+                        if len(availableParameters) > 0:
+                            result = execution(**argumentCalls)
+                        else:
+                            result = execution()
+                        toolCallResults.append({
+                            "role":"tool",
+                            "tool_call_id":call.id,
+                            "content":json.dumps(result) if isinstance(result, (dict, list)) else result
+                        })
+                    messages.extend(toolCallResults)
         except Exception as e:
             self.tui.stop = True
             if e in (KeyboardInterrupt, EOFError):
