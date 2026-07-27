@@ -160,14 +160,21 @@ class Agent:
             })
             threading.Thread(target=self.tui.loadingIcon).start()
             stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, tool_choice="auto")
+            loading = True
             content = ""
             toolCalls = []
             for chunk in stream:
                 if hasattr(chunk.choices[0].delta, "reasoning_content") and chunk.choices[0].delta.reasoning_content:
-                    self.tui.stop = True
+                    if loading:
+                        print("Thinking:")
+                        self.tui.stop = True
+                        thinking = True
+                        loading = False
                     print(chunk.choices[0].delta.reasoning_content, end="", flush=True)
-                    
                 if chunk.choices[0].delta.content:
+                    if thinking:
+                        thinking = False
+                        print("")
                     self.tui.stop = True
                     print(chunk.choices[0].delta.content, end="", flush=True)
                     content += chunk.choices[0].delta.content
@@ -235,11 +242,11 @@ class Agent:
                     elif content.lower().endswith("[close]"):
                         content = content[:-7]
                         open = False
-                    self.tts.speak(content)
                     messages.append({
                         "role":"assistant",
                         "content":content
                     })
+                    self.tts.speak(content)
             self.writeHistory(messages=messages)
             return open
         except Exception as e:
