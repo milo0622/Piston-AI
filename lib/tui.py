@@ -7,14 +7,12 @@ class TUI:
     def loadingIcon(self):
         icons = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
         while True:
+            if self.stop: break            
             try:
                 for icon in icons:
-                    if self.stop:
-                        break
+                    if self.stop: break
                     print(icon, end="\r", flush=True)
                     time.sleep(self.loadingSpeed)
-                if self.stop:
-                    break
             except (KeyboardInterrupt, EOFError):
+                self.stop = True
                 break
-        

@@ -11,3 +11,4 @@ geocoder
 piper-tts
 openwakeword
 litellm
+bleak

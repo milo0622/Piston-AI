@@ -31,5 +31,55 @@
                 "properties": {}
             }
         }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"readTextFromClipboard",
+            "description":"Returns the contents of the clipboard", 
+            "parameters":{
+                "type":"object",
+                "properties": {}
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"writeTextToClipboard",
+            "description":"Write text to clipboard (copy text). REQUIRED ARGUMENT: 'text' (string)", 
+            "parameters":{
+                "type":"object",
+                "properties": {
+                    "text":{
+                        "type":"string",
+                        "description":"The exact text content to be written to the clipboard."
+                    }
+                },
+                "required":["text"]
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"fullCheck",
+            "description":"This function fully checks the system's health, including: health, specifications and connectivity.", 
+            "parameters":{
+                "type":"object",
+                "properties": {}
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"connectivityCheck",
+            "description":"This function checks ths connectivity and network of the device.", 
+            "parameters":{
+                "type":"object",
+                "properties": {}
+            }
+        }
     }
 ]

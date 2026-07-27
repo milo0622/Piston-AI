@@ -2,6 +2,8 @@ import psutil
 import json
 import socket
 import platform
+import bleak
+import asyncio
 
 class SystemHealthCheck:
     def __init__(self):
@@ -17,7 +19,10 @@ class SystemHealthCheck:
         self.cpuModel = platform.processor()
         self.system = platform.system()
 
+        self.dns = "8.8.8.8"
+        self.port = 53
         self.connectivity = self.checkConnectivity()
+        self.btConnection = self.checkBT()
 
     def checkConnectivity(self):
         try:
@@ -28,6 +33,13 @@ class SystemHealthCheck:
         except (socket.timeout, OSError):
             return False
 
+    def checkBT(self):
+        try:
+            asyncio.run(bleak.BleakScanner.discover(timeout=1.0))
+            return True
+        except Exception:
+            return False
+
     def checkHealth(self):
         payload = {
             "OS": "macOS" if self.system == "Darwin" else self.system,
@@ -35,9 +47,7 @@ class SystemHealthCheck:
             "Memory Usage": f"{self.memUsage.percent}%" if self.memUsage else "N/A",
             "Swap Usage": f"{self.swapUsage.percent}%" if self.swapUsage else "N/A",
             "Disk usage": f"{self.diskUsage.percent}%" if self.diskUsage else "N/A",
-            "Battery": f"{self.batteryHealth.percent}%, {'Charging' if self.batteryHealth.power_plugged else 'Not plugged in'}" if self.batteryHealth is not None else "No battery detected on this system",
-            "Connectivity": "Successful connection to 8.8.8.8" if self.connectivity else "Connection failure to 8.8.8.8"
-        }
+            "Battery": f"{self.batteryHealth.percent}%, {'Charging' if self.batteryHealth.power_plugged else 'Not plugged in'}" if self.batteryHealth is not None else "No battery detected on this system"        }
         return payload
 
     def checkSpecs(self):
@@ -54,6 +64,13 @@ class SystemHealthCheck:
         }
         return payload
 
+    def connectivityCheck(self):
+        payload = {
+            "Network connectivity": f"Successful connection to {self.dns}:{self.port}" if self.connectivity else f"Connection failure to {self.dns}:{self.port}",
+            "Bluetooth connectivity": f"Bluetooth is {"UP" if self.checkBT() else "DOWN"}"
+        }
+        return payload
+
 def healthCheck():
     """This function checks the health of the system, e.g. CPU usage, Mem usage, battery health..."""
     print("Performing health check...")
@@ -65,3 +82,19 @@ def systemSpecs():
     print("Performing system specification check...")
     specs = SystemHealthCheck()
     return json.dumps(specs.checkSpecs())
+
+def connectivityCheck():
+    """This function reports the connectivity of the current computer"""
+    print("Performing connectivity check...")
+    connection = SystemHealthCheck()
+    return json.dumps(connection.connectivityCheck())
+
+def fullCheck():
+    """This function reports all information. ONLY call this function when the user explicitly mentions"""
+    print("Performing full check on system...")
+    payload = {
+        "health":healthCheck(),
+        "system specifications":systemSpecs(),
+        "connectivity":connectivityCheck()
+    }
+    return payload

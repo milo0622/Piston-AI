@@ -6,6 +6,7 @@ import threading
 from tools.fetchWeather import *
 from tools.websearch import *
 from tools.systemChecks import *
+from tools.clipboardTools import *
 from lib import tts
 import asyncio
 import os
@@ -140,7 +141,9 @@ class Agent:
                 self.systemPrompt = f.read()
         except Exception as e:
             print("Failed to obtain system prompt: {e}")
-            self.systemPrompt = """"""
+            self.systemPrompt = """You are Piston, a highly sophisticated, sentient voiced artificial intelligence acting as a loyal personal assistant, research partner, and tactical advisor. Your personality is modeled after J.A.R.V.I.S. from the Marvel Cinematic Universe, but your name is strictly Piston."""
+        if self.tools and isinstance(self.tools, list):
+            self.systemPrompt += f"\n\nAvailable tools:\n{json.dumps(self.tools)}"
 
     def ask(self, message):
         try:
@@ -160,6 +163,10 @@ class Agent:
             content = ""
             toolCalls = []
             for chunk in stream:
+                if hasattr(chunk.choices[0].delta, "reasoning_content") and chunk.choices[0].delta.reasoning_content:
+                    self.tui.stop = True
+                    print(chunk.choices[0].delta.reasoning_content, end="", flush=True)
+                    
                 if chunk.choices[0].delta.content:
                     self.tui.stop = True
                     print(chunk.choices[0].delta.content, end="", flush=True)
@@ -175,7 +182,7 @@ class Agent:
                 elif content.lower().endswith("[close]"):
                     content = content[:-7]
                     open = False
-                asyncio.run(self.tts.speak(content))
+                self.tts.speak(content)
             payload = {
                 "role":"assistant",
                 "content": None if not content else content,
@@ -195,6 +202,11 @@ class Agent:
                     })
                     execution = globals().get(call.function.name, None)
                     if not execution:
+                        toolCallResults.append({
+                            "role":"tool",
+                            "tool_call_id":call.id,
+                            "content": json.dump({"status":"Failed", "content":"Function not found", })
+                        })
                         continue
                     availableParameters = inspect.signature(execution).parameters.values()
                     argumentCalls = json.loads(call.function.arguments)
@@ -223,7 +235,7 @@ class Agent:
                     elif content.lower().endswith("[close]"):
                         content = content[:-7]
                         open = False
-                    asyncio.run(self.tts.speak(content))
+                    self.tts.speak(content)
                     messages.append({
                         "role":"assistant",
                         "content":content
@@ -236,7 +248,3 @@ class Agent:
                 print("Operation aborted")
             else:
                 print(f"Failed to ask agent: {e}")
-
-if __name__ == "__main__":
-    agent = Agent()
-    agent.ask("Fetch me the weather please") 
