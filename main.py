@@ -8,6 +8,7 @@ from pathlib import Path
 import json
 import os
 import sys
+from dotenv import dotenv_values
 tempTui.stop = True
 print("√")
 
@@ -17,8 +18,10 @@ class Piston:
     def __init__(self, chatHistoryPath="userdata/chats/fallback.json"):
         print("\033[3GInit...", end="\r")
         self.tui = tui.TUI()
+        self.apiKeys = None
+        self.readDotEnv()
         self.model = modelID()
-        self.agent = agent.Agent(chatHistoryPath=chatHistoryPath, model=self.model)
+        self.agent = agent.Agent(chatHistoryPath=chatHistoryPath, model=self.model, apiKeys=self.apiKeys)
         soundfiles = ["assets/startup.mp3", "assets/startSTT.mp3", "assets/stopSTT.mp3"]
         for idx, soundfile in enumerate(soundfiles):
             soundfiles[idx] = Path(soundfile).resolve()
@@ -37,7 +40,6 @@ class Piston:
             self.wakewordSuccess = False
         self.open = False
         self.sfx.playSound(0, blocking=True)
-
             
     def main(self):
         print("Welcome to Piston AI!")
@@ -66,7 +68,13 @@ class Piston:
         except (KeyboardInterrupt, EOFError):
             self.tui.stop = True
             print("Bye!")
-            sys.exit()
+            sys.exit()  
+
+    def readDotEnv(self):
+        self.apiKeys = {}
+        config = dotenv_values()
+        for key in config:
+            self.apiKeys[key] = config[key]
 
 def modelID():
     filePath = "userdata/config.json"
@@ -95,6 +103,7 @@ def modelID():
     else:
         model = "gemma:e4b"
     return model
+
 if __name__ == "__main__":
     PistonAI = Piston()
     PistonAI.main()

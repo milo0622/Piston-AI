@@ -115,5 +115,41 @@
                 "required":["query"]
             }
         }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"playpauseMedia",
+            "description":"Toggle play/pause of the media", 
+            "parameters":{
+                "type":"object",
+                "properties": {
+                }
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"nexTrack",
+            "description":"Skips to next track of the media", 
+            "parameters":{
+                "type":"object",
+                "properties": {
+                }
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"previousTrack",
+            "description":"Returns to previous track of the media", 
+            "parameters":{
+                "type":"object",
+                "properties": {
+                }
+            }
+        }
     }
 ]

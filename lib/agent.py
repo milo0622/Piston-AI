@@ -8,6 +8,7 @@ from tools.websearch import *
 from tools.systemChecks import *
 from tools.clipboardTools import *
 from tools.YouTubeTools import *
+from tools.media import *
 from lib import tts
 import asyncio
 import os
@@ -18,7 +19,7 @@ import inspect
 from lib.puller import *
 
 class Agent:
-    def __init__(self, providers:str="providers/providers.json", model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json", toolPath="tools/tools.json"):
+    def __init__(self, providers:str="providers/providers.json", model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json", toolPath="tools/tools.json", apiKeys={}):
         self.providersPath = providers
         self.providers = None
         self.provider = "ollama"
@@ -31,9 +32,10 @@ class Agent:
         self.toolPath = toolPath
         self.tools = []
         self.tts = tts.TTS()
+        self.keys = apiKeys
 
         self.systemPrompt = None
-
+        
         self.checkProviders()
         self.fetchTools()
         self.fetchSystemPrompt()
@@ -77,7 +79,10 @@ class Agent:
         fallback = self.providerConfig.get("fallback", "http://127.0.0.1:11434")
         self.baseURL = os.getenv(self.envVarName, fallback)
         self.endpoint = self.providerConfig.get("endpoint", "/v1")
-        self.api = self.providerConfig.get("api", "ollama").strip() 
+        if self.provider.upper() in self.keys:
+            self.api = self.keys[self.provider.upper()]
+        else:
+            self.api = "-"
 
         className = f"{self.provider[0].upper()}{self.provider[1:]}"
         providerClass = getattr(self.loadedProvider, className)
@@ -145,7 +150,6 @@ class Agent:
             self.systemPrompt = """You are Piston, a highly sophisticated, sentient voiced artificial intelligence acting as a loyal personal assistant, research partner, and tactical advisor. Your personality is modeled after J.A.R.V.I.S. from the Marvel Cinematic Universe, but your name is strictly Piston."""
         if self.tools and isinstance(self.tools, list):
             self.systemPrompt += f"\n\nAvailable tools:\n{json.dumps(self.tools)}"
-
     def ask(self, message):
         try:
             open = None
@@ -203,39 +207,51 @@ class Agent:
                     return open
                 if toolCalls:
                     print()
+                    print(toolCalls)
                     toolCallResults = []
-                    for call in toolCalls:
-                        messages[-1]["tool_calls"].append({
-                            "id":call.id,
-                            "type":call.type,
-                            "function":{
-                                "name":call.function.name,
-                                "arguments": call.function.arguments
-                            }
-                        })
-                        execution = globals().get(call.function.name, None)
-                        if not execution:
+                    toolcalls = []
+                    for idx, call in enumerate(toolCalls):
+                        if call.id is not None:
+                            toolcalls.append({
+                                "id":call.id,
+                                "type":call.type,
+                                "function":{
+                                    "name":call.function.name,
+                                    "arguments": call.function.arguments
+                                }
+                            })
+                            execution = globals().get(toolcalls[idx].get("function", {}).get("name"))
+                            if execution is None:
+                                toolCallResults.append({
+                                    "role":"tool",
+                                    "tool_call_id":call.id,
+                                    "content": json.dumps({"status":"Failed", "content":"Function not found", })
+                                })
+                                continue
+                            availableParameters = inspect.signature(execution).parameters.values()
+                            rawArgs = call.function.arguments
+                            if rawArgs and rawArgs.strip():
+                                try:
+                                    argumentCalls = json.loads(rawArgs)
+                                except json.JSONDecodeError:
+                                    argumentCalls = {}
+                            else:
+                                argumentCalls = {}
+                            if len(availableParameters) > 0:
+                                result = execution(**argumentCalls)
+                            else:
+                                result = execution()
                             toolCallResults.append({
                                 "role":"tool",
                                 "tool_call_id":call.id,
-                                "content": json.dump({"status":"Failed", "content":"Function not found", })
+                                "content":json.dumps(result) if isinstance(result, (dict, list)) else result
                             })
-                            continue
-                        availableParameters = inspect.signature(execution).parameters.values()
-                        argumentCalls = json.loads(call.function.arguments)
-                        if len(availableParameters) > 0:
-                            result = execution(**argumentCalls)
-                        else:
-                            result = execution()
-                        toolCallResults.append({
-                            "role":"tool",
-                            "tool_call_id":call.id,
-                            "content":json.dumps(result) if isinstance(result, (dict, list)) else result
-                        })
                     messages.extend(toolCallResults)
         except Exception as e:
             self.tui.stop = True
-            if e in (KeyboardInterrupt, EOFError):
-                print("Operation aborted")
+            if (KeyboardInterrupt, EOFError) in e:
+                print("Operation aborted.")
+                return
             else:
                 print(f"Failed to ask agent: {e}")
+                return

@@ -1,6 +1,7 @@
 import webbrowser
 import json
 from yt_dlp import YoutubeDL
+from tools import media
 
 class YouTubeTools:
     def __init__(self, searchParams:str):

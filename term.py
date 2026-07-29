@@ -5,6 +5,7 @@ import readline
 from lib import tui
 import threading
 from main import *
+from dotenv import dotenv_values
 
 args = sys.argv[1:]
 def main():
@@ -15,7 +16,7 @@ def main():
     tuiUtils = tui.TUI()
     threading.Thread(target=tuiUtils.loadingIcon).start()
     model = modelID()
-    mainAgent = agent.Agent(chatHistoryPath=chatPath, model=model)
+    mainAgent = agent.Agent(chatHistoryPath=chatPath, model=model, apiKeys=readEnv())
     tuiUtils.stop = True
     print("", end="", flush=True)
 
@@ -31,7 +32,14 @@ def main():
             print()
         except (KeyboardInterrupt, EOFError):
             print("bye!")
-            break
+            return
+
+def readEnv():
+    payload = {}
+    config = dotenv_values(".env")
+    for key in config:
+        payload[key] = config[key]
+    return payload
 
 if __name__ == "__main__":
     main()
