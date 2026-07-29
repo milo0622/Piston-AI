@@ -207,7 +207,6 @@ class Agent:
                     return open
                 if toolCalls:
                     print()
-                    print(toolCalls)
                     toolCallResults = []
                     toolcalls = []
                     for idx, call in enumerate(toolCalls):
@@ -246,6 +245,7 @@ class Agent:
                                 "tool_call_id":call.id,
                                 "content":json.dumps(result) if isinstance(result, (dict, list)) else result
                             })
+                    messages[-1]["tool_calls"] = toolcalls
                     messages.extend(toolCallResults)
         except Exception as e:
             self.tui.stop = True
