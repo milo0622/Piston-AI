@@ -17,3 +17,4 @@ pyobjc-framework-Quartz; sys_platform == "darwin"
 evdev; sys_platform == "win32"
 playwright
 python-dotenv
+questionary
