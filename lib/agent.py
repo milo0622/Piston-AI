@@ -167,6 +167,7 @@ class Agent:
             while True:
                 stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, tool_choice="auto", max_tokens=1000)
                 loading = True
+                thinking = False
                 content = ""
                 toolCalls = []
                 for chunk in stream:
