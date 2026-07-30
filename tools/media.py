@@ -5,26 +5,26 @@ if platform.system() == "Darwin":
     import Quartz
 import time
 import json
+from pynput.keyboard import Key, Controller
 
 class MediaControl:
     def __init__(self):
         self.OS = platform.system() if platform.system() in ("Linux", "Windows") else "macOS"
-        if self.OS == "Linux":
-            from evdev import UInput, ecodes as e
+        self.Key = Controller()
 
     def mediaButton(self, action):
         if action == "pause":
             keycode = 16
             mediaBtn = 0xB3
-            event = e.KEY_PLAYPAUSE if self.OS == "Linux" else None 
+            event = "xdotool key XF86AudioPlay".split()
         elif action == "next":
             keycode = 17
             mediaBtn = 0xB0
-            event = e.KEY_NEXTSONG if self.OS == "Linux" else None 
+            event = "xdotool key XF86AudioNext".split()
         elif action == "previous":
             keycode = 18
             mediaBtn = 0xB1
-            event = e.KEY_PREVIOUSSONG if self.OS == "Linux" else None 
+            event = "xdotool key XF86AudioPrev".split()
 
         if self.OS == "macOS":
             eventDown = Quartz.NSEvent.otherEventWithType_location_modifierFlags_timestamp_windowNumber_context_subtype_data1_data2_(14, (0,0), 0xa00, 0, 0, None, 8, (keycode << 16) | (0xa << 8), -1)
@@ -41,13 +41,10 @@ class MediaControl:
             time.sleep(0.3)
             ctypes.windll.user32.keybd_event(mediaBtn, 0, extendedKey|keyup, 0)
         elif self.OS == "Linux":
-            with UInput() as ui:
-                ui.write(e.EV_KEY, event, 1)
-                ui.syn()
-                time.sleep(0.05)
-                ui.write(e.EV_KEY, event, 0)
-                ui.syn()
-
+            try:
+                subprocess.run(event)
+            except subprocess.CalledProcessError:
+                pass
 def playpauseMedia():
     mc = MediaControl()
     try:

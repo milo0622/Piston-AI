@@ -3,13 +3,12 @@ import platform
 import json
 import shutil
 from pathlib import Path
-from lib.puller import Puller
 import importlib
+import os
 
 class setup:
     def __init__(self):
         self.OS = "macOS" if platform.system() == "Darwin" else platform.system()
-        self.externPackages = ["xclip", "ollama"]
         self.providers = None
         self.packageManagers = {
             "apt": {
@@ -54,9 +53,29 @@ class setup:
         self.pacMan = None
         self.updateCommand = None
         
-        if self.checkDistro():
+        self.sessionType = os.getenv("XDG_SESSION_TYPE", "")
+
+        self.externPackages = ["xclip", "ollama", "xdotool"]
+        self.conditionalPackages = [
+            {
+                "apt":"build-essential",
+                "pacman":"base-devel",
+                "dnf":"@Development Tools",
+                "apk":"build-base",
+                "zypper":"-t pattern devel_basis"
+            },
+            {
+                "apt":"python3-dev",
+                "pacman":"python3",
+                "dnf":"python3-devel",
+                "apk":"python3-dev",
+                "zypper":"python314-devel"
+            }
+        ]
+        self.updateCommand, self.installCommand = self.checkDistro()
+        if self.updateCommand and self.installCommand:
             self.update()
-            self.install(self.externPackages)
+            self.install(self.externPackages, self.conditionalPackages)
 
         if not self.installPip():
             print("Failed to install pip packages. Please install them manually.")
@@ -87,9 +106,7 @@ class setup:
             updateCommand = ["sudo" if shutil.which("sudo") else "", self.pacMan, self.packageManagers[self.pacMan]["update"]]
             installCommand = ["sudo" if shutil.which("sudo") else "", self.pacMan, self.packageManagers[self.pacMan]["install"]]
         
-        self.updateCommand = [item for item in updateCommand if item.strip() != ""]
-        self.installCommand = [item for item in installCommand if item.strip() != ""]
-        return True
+        return [item for item in updateCommand if item.strip() != ""], [item for item in installCommand if item.strip() != ""]
     
     def update(self):
         print(self.updateCommand)
@@ -100,9 +117,16 @@ class setup:
             print(f"Failed to update repositories. Please update manually.")
             return False
     
-    def install(self, packages:list[str]):
+    def install(self, packages:list[str], conditionalPackages:list=None):
         try:
-            self.installCommand.extend(self.externPackages)
+            morePackages = []
+            if conditionalPackages:
+                for item in conditionalPackages:
+                    installCommand = self.installCommand
+                    installCommand.append(item[self.pacMan])
+                    subprocess.run(self.installCommand, check=True)
+            installCommand = self.installCommand
+            installCommand.extend(packages)
             subprocess.run(self.installCommand, check=True)
             return True
         except subprocess.CalledProcessError:
@@ -110,10 +134,6 @@ class setup:
             return False
 
     def installPip(self, requirementsFile="requirements.txt"):
-        if not Path(requirementsFile).exists():
-            fileUrl = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/requirements.txt"
-            Puller(url=fileUrl, outputPath="requirements.txt").pull()
-        
         try:
             pipInstall = ["pip3" if shutil.which("pip3") else "pip", "install", "-r", requirementsFile, "--break-system-packages"]
             print(pipInstall)
