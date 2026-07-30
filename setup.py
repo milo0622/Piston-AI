@@ -171,7 +171,8 @@ class setup:
                     lines = f.readlines()
             else:
                 lines = []
-            lines = [line for line in lines if not line.lower().startswith(providerAns)]
+            lines = [line for line in lines if not line.lower().startswith(providerAns) and not line.startswith("#")]
+            lines.insert("# This file was automatically generated")
             lines.append(f"{providerAns.upper()}=\"{apiAns}\"")
             print("\nConfigurations:")
             for key in payload:

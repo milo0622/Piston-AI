@@ -1,7 +1,8 @@
 import platform
 import subprocess
 import ctypes
-import Quartz
+if platform.system() == "Darwin":
+    import Quartz
 import time
 import json
 
