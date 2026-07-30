@@ -9,22 +9,23 @@ import openwakeword.utils
 
 class Wakeword:
     def __init__(self, wakewordDir="wakewordModels", threshold:float=0.67, sampleRate:int=16000):
-        self.sampleRate = sampleRate
-        self.threshold = threshold
-        self.wakewordDir = wakewordDir
-        self.modelDir = f"{self.wakewordDir}/wakeword.onnx"
+        try:
+            self.sampleRate = sampleRate
+            self.threshold = threshold
+            self.wakewordDir = wakewordDir
+            self.modelDir = f"{self.wakewordDir}/wakeword.onnx"
 
-        self.chunkSize = 1280
-        self.tui = tui.TUI()
+            self.chunkSize = 1280
+            self.tui = tui.TUI()
 
-        self.model = None
-        self.modelName = None
+            self.model = None
+            self.modelName = None
 
-        self.modelLoad = self.loadModel()
+            self.modelLoad = self.loadModel()
+        except: self.tui.loadingIcon = True
 
     def loadModel(self):
         try:
-            openwakeword.utils.download_models()
             url = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/wakewordModels/wakeword.onnx"
             Path(self.wakewordDir).mkdir(exist_ok=True, parents=True)
             if not Path(f"{self.wakewordDir}/wakeword.onnx").is_file():
@@ -47,7 +48,10 @@ class Wakeword:
 
             threading.Thread(target=self.tui.loadingIcon).start()
             print("\033[3GLoading wakeword model...")
-            self.model = Model(wakeword_models=[self.modelDir], inference_framework="onnx")
+            try:
+                self.model = Model(wakeword_models=[self.modelDir], inference_framework="onnx")
+            except:
+                self.model = Model(wakeword_model_paths=[self.modelDir])
             self.modelName = list(self.model.models.keys())[0]
             self.tui.stop = True
             print("Model successfully loaded.")

@@ -68,7 +68,7 @@ class TTS:
     def loadModel(self, path="voices/jarvis.onnx"):
         print("\033[3GLoading TTS model...", end="\r")
         threading.Thread(target=self.tui.loadingIcon).start()
-        self.voice = PiperVoice.load(path)
+        self.voice = PiperVoice.load(path, use_cuda=False)
         self.tui.stop = True
         print("\r√")
 

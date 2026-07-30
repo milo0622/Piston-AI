@@ -178,9 +178,9 @@ class Agent:
                             loading = False
                         print(chunk.choices[0].delta.reasoning_content, end="", flush=True)
                     if chunk.choices[0].delta.content:
-                        thinking = False
                         if thinking:
-                            print("")
+                            print()
+                        thinking = False
                         self.tui.stop = True
                         print(chunk.choices[0].delta.content, end="", flush=True)
                         content += chunk.choices[0].delta.content
