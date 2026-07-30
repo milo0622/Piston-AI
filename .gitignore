@@ -5,3 +5,4 @@ userdata/
 voices/
 .DS_STORE
 .env
+*.pyc
