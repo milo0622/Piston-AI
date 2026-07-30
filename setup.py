@@ -157,6 +157,7 @@ class setup:
         ).ask().strip()
         print(providerAns)
 
+        apiAns = None
         if providerAns == "ollama":
             modelAns = self.questionary.text("Select a model (Leave blank if no preference): ").ask().strip()
             if not modelAns.strip():
@@ -182,7 +183,6 @@ class setup:
             "provider":providerAns,
             "model": modelAns
         }
-        
         if not Path("userdata").exists():
             Path("userdata").mkdir(parents=True, exist_ok=True)
         with open("userdata/config.json", "w") as f:
@@ -205,3 +205,5 @@ class setup:
 if __name__ == "__main__":
     s = setup()
     s.config()
+    print("Setup finished! Please run main.py (For voice input) or term.py (For manual input).")
+    
