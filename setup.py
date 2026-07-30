@@ -134,25 +134,27 @@ class setup:
         providerAns = self.questionary.select(
             "Which provider would you like to utilize? (Select Ollama if no preference)",
             choices=providerQ
-        ).ask()
+        ).ask().strip()
         print(providerAns)
 
         if providerAns == "ollama":
-            modelAns = self.questionary.text("Select a model (Leave blank if no preference): ").ask()
+            modelAns = self.questionary.text("Select a model (Leave blank if no preference): ").ask().strip()
             if not modelAns.strip():
                 modelAns = "gemma4:e4b"
         else:
             apiQ = ["I have an API key", "Not suitable"]
-            apiSelAns = self.questionary.select("Does this provider need an API key?", choices=apiQ).ask()
+            apiSelAns = self.questionary.select("Does this provider need an API key?", choices=apiQ).ask().strip()
             if apiSelAns == apiQ[0]:
                 apiAns = None
                 while apiAns is None:
                     apiAns = self.questionary.text("Enter API key: ").ask()
                     if not apiAns:
                         print("Please enter API key.")
+                    else:
+                        apiAns = apiAns.strip() 
             modelAns = None
             while modelAns is None:
-                modelAns = self.questionary.text("Select a model (necessary): ").ask()
+                modelAns = self.questionary.text("Select a model (necessary): ").ask().strip()
                 if modelAns is None:
                     print("Please enter model ID.")
 
@@ -172,7 +174,7 @@ class setup:
             else:
                 lines = []
             lines = [line for line in lines if not line.lower().startswith(providerAns) and not line.startswith("#")]
-            lines.insert("# This file was automatically generated")
+            lines.insert(0, "# This file was automatically generated")
             lines.append(f"{providerAns.upper()}=\"{apiAns}\"")
             print("\nConfigurations:")
             for key in payload:

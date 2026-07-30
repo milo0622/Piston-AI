@@ -249,9 +249,8 @@ class Agent:
                     messages.extend(toolCallResults)
         except Exception as e:
             self.tui.stop = True
-            if (KeyboardInterrupt, EOFError) in e:
+            if isinstance(e, (KeyboardInterrupt, EOFError)):
                 print("Operation aborted.")
                 return
-            else:
-                print(f"Failed to ask agent: {e}")
-                return
+            print(f"Failed to ask agent: {e}")
+            return
