@@ -15,7 +15,6 @@ bleak
 yt-dlp
 pyobjc-framework-Quartz; sys_platform == "darwin"
 evdev; sys_platform == "linux"
-playwright
 python-dotenv
 questionary
 jeepney; sys_platform == "linux"

@@ -74,7 +74,7 @@ class STT:
 
                 rms = np.sqrt(np.mean(flat_chunk**2))
 
-                if rms < 0.007:
+                if rms < 0.005:
                     silence_count += 1
                     if silence_count > MAX_SILENCE_CHUNKS:
                         if text_output.rstrip():

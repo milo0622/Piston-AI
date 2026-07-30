@@ -91,7 +91,7 @@ class setup:
                     self.pacMan = manager
                     break
         else:
-            return False
+            return None, None
         if shutil.which("sudo"):
             subprocess.run(["sudo", "-v"])
         if self.packageManagers[self.pacMan].get("assumeYes", None) is not None:
