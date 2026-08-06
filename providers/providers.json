@@ -1,14 +1,14 @@
 {
     "ollama":{
-        "api":"ollama",
         "baseURLENV":"OLLAMA_HOST",
         "fallback":"http://localhost:11434",
-        "endpoint":"/v1"
+        "endpoint":"/v1",
+        "modelLoad":true
     },
     "nvidia": {
-        "api":null,
         "baseURLENV":"",
         "fallback":"https://integrate.api.nvidia.com",
-        "endpoint":"/v1"
+        "endpoint":"/v1",
+        "modelLoad":false
     }
 }

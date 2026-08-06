@@ -79,14 +79,23 @@ class Agent:
         fallback = self.providerConfig.get("fallback", "http://127.0.0.1:11434")
         self.baseURL = os.getenv(self.envVarName, fallback)
         self.endpoint = self.providerConfig.get("endpoint", "/v1")
+            
+            
         if self.provider.upper() in self.keys:
             self.api = self.keys[self.provider.upper()]
         else:
             self.api = "-"
 
-        className = f"{self.provider[0].upper()}{self.provider[1:]}"
-        providerClass = getattr(self.loadedProvider, className)
-        providerClass(model=self.model)
+        self.initialization = self.providerConfig.get("modelLoad", None)
+        if self.initialization or self.initialization is None:
+            print("Skipping model initialization.")
+        else:
+            try:
+                className = f"{self.provider[0].upper()}{self.provider[1:]}"
+                providerClass = getattr(self.loadedProvider, className)
+                providerClass(model=self.model)
+            except Exception as e:
+                print(f"Failed to initialize provider: {e}")
 
     def verifyHistoryPath(self):
         if not self.chatHistoryPath.strip():
