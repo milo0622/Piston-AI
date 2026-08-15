@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 import importlib
 import os
+from lib.puller import Puller
 
 class setup:
     def __init__(self):
@@ -55,8 +56,8 @@ class setup:
         
         self.sessionType = os.getenv("XDG_SESSION_TYPE", "")
 
-        self.externPackages = ["xclip", "ollama", "xdotool"]
-        self.conditionalPackages = [
+        self.linuxExternPackages = ["xclip", "ollama", "xdotool"]
+        self.linuxConditionalPackages = [
             {
                 "apt":"build-essential",
                 "pacman":"base-devel",
@@ -72,10 +73,14 @@ class setup:
                 "zypper":"python314-devel"
             }
         ]
-        self.updateCommand, self.installCommand = self.checkDistro()
-        if self.updateCommand and self.installCommand:
-            self.update()
-            self.install(self.externPackages, self.conditionalPackages)
+
+        self.macOSExternPackages = ["ollama"]
+
+        if self.OS == "Linux":
+            self.updateCommand, self.installCommand = self.checkDistro()
+            if self.updateCommand and self.installCommand:
+                self.update()
+                self.install(self.linuxExternPackages, self.linuxConditionalPackages)
 
         if not self.installPip():
             print("Failed to install pip packages. Please install them manually.")
@@ -83,6 +88,21 @@ class setup:
             self.questionary = importlib.import_module("questionary")
         
         self.gatherProviders()
+
+    def checkInstaller(self):
+        if self.OS == "macOS":
+            brewAvailable = shutil.which("brew")
+        else:
+            return None, None
+        if not brewAvailable:
+            try:
+                subprocess.run('/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'.split(), check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to install brew: {e}")
+                return None, None
+            except Exception as e:
+                print(f"Failed to call process: {e}")
+                return None, None
 
     def checkDistro(self):
         if self.OS == "Linux":
@@ -130,7 +150,7 @@ class setup:
             subprocess.run(self.installCommand, check=True)
             return True
         except subprocess.CalledProcessError:
-            print(f"Failed to install packages with {self.pacMan}: {" ".join(self.externPackages)}")
+            print(f"Failed to install packages with {self.pacMan}: {" ".join(self.linuxExternPackages)}")
             return False
 
     def installPip(self, requirementsFile="requirements.txt"):
