@@ -10,6 +10,7 @@ from lib.puller import Puller
 class setup:
     def __init__(self):
         self.OS = "macOS" if platform.system() == "Darwin" else platform.system()
+        self.arch = platform.machine()
         self.providers = None
         self.packageManagers = {
             "apt": {
@@ -81,6 +82,8 @@ class setup:
             if self.updateCommand and self.installCommand:
                 self.update()
                 self.install(self.linuxExternPackages, self.linuxConditionalPackages)
+        elif self.OS == "macOS":
+            self.checkInstaller()
 
         if not self.installPip():
             print("Failed to install pip packages. Please install them manually.")
@@ -90,19 +93,36 @@ class setup:
         self.gatherProviders()
 
     def checkInstaller(self):
+        evalCmd = 'eval "$(/opt/homebrew/bin/brew shellenv)"' if self.arch == "arm64" else 'eval "$(/usr/local/bin/brew shellenv)"'
         if self.OS == "macOS":
             brewAvailable = shutil.which("brew")
         else:
-            return None, None
+            return
         if not brewAvailable:
             try:
+                print("Installing HomeBrew")
                 subprocess.run('/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'.split(), check=True)
             except subprocess.CalledProcessError as e:
-                print(f"Failed to install brew: {e}")
-                return None, None
+                print(f"Failed to install HomeBrew: {e}")
+                return
             except Exception as e:
                 print(f"Failed to call process: {e}")
-                return None, None
+                return
+
+            print("Adding homebrew to PATH")
+            try:
+                subprocess.run(f"echo '{evalCmd}' >> ~/.zprofile".split(), check=True)
+                subprocess.run(evalCmd.split(), check=True)
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to intsall HomeBrew: {e}")
+                return
+
+        try:
+            print("Installing brew packages...")
+            subprocess.run(f"yes | brew install {" ".join(self.macOSExternPackages)}", check=True, shell=True)
+            print("Successfully installed brew packages")
+        except subprocess.CalledProcessåError as e:
+            print(f"Faild to install brew packages: {e}")
 
     def checkDistro(self):
         if self.OS == "Linux":
