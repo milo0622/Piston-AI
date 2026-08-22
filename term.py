@@ -28,7 +28,7 @@ def main():
             if uInput.lower() == "/exit":
                 print('bye!')
                 break
-            mainAgent.ask(message=uInput)
+            mainAgent.ask(message=uInput, terminal=True)
             print()
         except (KeyboardInterrupt, EOFError):
             print("bye!")

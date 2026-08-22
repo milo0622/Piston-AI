@@ -5,7 +5,6 @@ import shutil
 from pathlib import Path
 import importlib
 import os
-from lib.puller import Puller
 
 class setup:
     def __init__(self):
@@ -75,7 +74,7 @@ class setup:
             }
         ]
 
-        self.macOSExternPackages = ["ollama"]
+        self.macOSExternPackages = ["ollama", "nowplaying-cli"]
 
         if self.OS == "Linux":
             self.updateCommand, self.installCommand = self.checkDistro()
@@ -90,8 +89,6 @@ class setup:
         else:
             self.questionary = importlib.import_module("questionary")
         
-        self.gatherProviders()
-
     def checkInstaller(self):
         evalCmd = 'eval "$(/opt/homebrew/bin/brew shellenv)"' if self.arch == "arm64" else 'eval "$(/usr/local/bin/brew shellenv)"'
         if self.OS == "macOS":
@@ -181,13 +178,6 @@ class setup:
             return True
         except subprocess.CalledProcessError:
             return False
-        
-    def gatherProviders(self):
-        if not Path("providers/providers.json").exists():
-            url = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/providers/providers.json"
-            Puller(url, "providers/providers.json").pull()
-        with open("providers/providers.json", "r") as f:
-            self.providers = json.load(f)
     
     def config(self):
         providerQ = [provider for provider in self.providers]

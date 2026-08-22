@@ -150,7 +150,7 @@ class Agent:
             self.systemPrompt = """You are Piston, a highly sophisticated, sentient voiced artificial intelligence acting as a loyal personal assistant, research partner, and tactical advisor. Your personality is modeled after J.A.R.V.I.S. from the Marvel Cinematic Universe, but your name is strictly Piston."""
         if self.tools and isinstance(self.tools, list):
             self.systemPrompt += f"\n\nAvailable tools:\n{json.dumps(self.tools)}"
-    def ask(self, message):
+    def ask(self, message, terminal=False):
         try:
             open = None
             self.fetchSystemPrompt()
@@ -165,7 +165,7 @@ class Agent:
             })
             threading.Thread(target=self.tui.loadingIcon).start()
             while True:
-                stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, tool_choice="auto", max_tokens=1000)
+                stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, max_tokens=1000, tool_choice="auto")
                 loading = True
                 thinking = False
                 content = ""
@@ -196,62 +196,69 @@ class Agent:
                     elif content.lower().endswith("[close]"):
                         content = content[:-7]
                         open = False
-                    self.tts.speak(content)
-                payload = {
-                    "role":"assistant",
-                    "content": None if not content else content,
-                    "tool_calls":[] if toolCalls else None
-                }
-                messages.append(payload)
+                    if not terminal: self.tts.speak(content)
                 if content:
-                    self.writeHistory(messages=messages)
+                    payload = {
+                        "role": "assistant",
+                        "content": content,
+                    }
+                    messages.append(payload)
                     return open
                 if toolCalls:
                     print()
-                    toolCallResults = []
-                    toolcalls = []
+                    arg = []
+                    toolCall = {
+                        "id": None,
+                        "type": "function",
+                        "function": {"name": "", "arguments": ""}
+                    }
                     for idx, call in enumerate(toolCalls):
-                        if call.id is not None:
-                            toolcalls.append({
-                                "id":call.id,
-                                "type":call.type,
-                                "function":{
-                                    "name":call.function.name,
-                                    "arguments": call.function.arguments
-                                }
-                            })
-                            execution = globals().get(toolcalls[idx].get("function", {}).get("name"))
-                            if execution is None:
-                                toolCallResults.append({
-                                    "role":"tool",
-                                    "tool_call_id":call.id,
-                                    "content": json.dumps({"status":"Failed", "content":"Function not found", })
-                                })
-                                continue
-                            availableParameters = inspect.signature(execution).parameters.values()
-                            rawArgs = call.function.arguments
-                            if rawArgs and rawArgs.strip():
-                                try:
-                                    argumentCalls = json.loads(rawArgs)
-                                except json.JSONDecodeError:
-                                    argumentCalls = {}
-                            else:
-                                argumentCalls = {}
-                            if len(availableParameters) > 0:
-                                result = execution(**argumentCalls)
-                            else:
-                                result = execution()
-                            toolCallResults.append({
-                                "role":"tool",
-                                "tool_call_id":call.id,
-                                "content":json.dumps(result) if isinstance(result, (dict, list)) else result
-                            })
-                    messages[-1]["tool_calls"] = toolcalls
-                    messages.extend(toolCallResults)
+                        if call.id:
+                            toolCall["id"] = call.id
+                        toolCall["type"] = "function"
+                        if call.function:
+                            if call.function.name:
+                                toolCall["function"]["name"] = call.function.name
+                            if call.function.arguments:
+                                arg.append(call.function.arguments)
+                    toolCall["function"]["arguments"] = ("".join(arg))
+
+                    toolCallHistory = {
+                        "role":"assistant", 
+                        "content":None,
+                        "tool_calls": []
+                    }
+                    toolCallHistory["tool_calls"].append(toolCall)
+
+                    try:
+                        execute = globals()[toolCall["function"]["name"]]
+                    except:
+                        execute = self.errorTool
+
+                    if execute == self.errorTool:
+                        result = execute(toolCall["function"]["name"])
+                    else:
+                        print("Result: ")
+                        if len(inspect.signature(execute).parameters) > 0:
+                            result = execute(**json.loads(toolCall["function"]["arguments"]))
+                        else:
+                            result = execute()
+
+                    toolCallResult = {
+                        "role":"tool",
+                        "tool_call_id": toolCall["id"],
+                        "name": toolCall["function"]["name"],
+                        "content": json.dumps(result) if isinstance(result, str) else result
+                    }
+                    messages.append(toolCallHistory)
+                    messages.append(toolCallResult)
+
+                else:
+                    break
+            self.writeHistory(messages=messages)
         except Exception as e:
-            self.tui.stop = True
-            if isinstance(e, (KeyboardInterrupt, EOFError)):
-                print("Operation aborted.")
-                return
             print(f"Failed to ask agent: {e}")
-            return
+
+
+    def errorTool(self, toolName:str):
+        return f"Failed to execute tool: {toolName}"

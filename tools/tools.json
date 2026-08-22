@@ -47,7 +47,7 @@
         "type":"function",
         "function":{
             "name":"writeTextToClipboard",
-            "description":"Write text to clipboard (copy text). REQUIRED ARGUMENT: 'text' (string)", 
+            "description":"Write text to clipboard (copy text). STRICTLY REQUIRED ARGUMENT: 'text' (string)", 
             "parameters":{
                 "type":"object",
                 "properties": {
