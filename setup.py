@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 import importlib
 import os
+import sys
 
 class setup:
     def __init__(self):
@@ -76,6 +77,8 @@ class setup:
 
         self.macOSExternPackages = ["ollama", "nowplaying-cli"]
 
+        self.windowsExternPackages = ["Ollama.Ollama"]
+
         if self.OS == "Linux":
             self.updateCommand, self.installCommand = self.checkDistro()
             if self.updateCommand and self.installCommand:
@@ -83,11 +86,18 @@ class setup:
                 self.install(self.linuxExternPackages, self.linuxConditionalPackages)
         elif self.OS == "macOS":
             self.checkInstaller()
+        elif self.OS == "Windows":
+            self.wingetInstall()
+
+        if sys.version_info < (3, 11):
+            print("Please run setup.py again with the latest version of Python.")
 
         if not self.installPip():
             print("Failed to install pip packages. Please install them manually.")
         else:
             self.questionary = importlib.import_module("questionary")
+
+        self.gatherProviders()
         
     def checkInstaller(self):
         evalCmd = 'eval "$(/opt/homebrew/bin/brew shellenv)"' if self.arch == "arm64" else 'eval "$(/usr/local/bin/brew shellenv)"'
@@ -98,7 +108,7 @@ class setup:
         if not brewAvailable:
             try:
                 print("Installing HomeBrew")
-                subprocess.run('/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'.split(), check=True)
+                subprocess.run('/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"', shell=True, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"Failed to install HomeBrew: {e}")
                 return
@@ -108,18 +118,21 @@ class setup:
 
             print("Adding homebrew to PATH")
             try:
-                subprocess.run(f"echo '{evalCmd}' >> ~/.zprofile".split(), check=True)
-                subprocess.run(evalCmd.split(), check=True)
+                subprocess.run(f"echo '{evalCmd}' >> ~/.zprofile", check=True, shell=True)
+                subprocess.run(evalCmd, shell=True, check=True)
             except subprocess.CalledProcessError as e:
                 print(f"Failed to intsall HomeBrew: {e}")
                 return
 
         try:
             print("Installing brew packages...")
-            subprocess.run(f"yes | brew install {" ".join(self.macOSExternPackages)}", check=True, shell=True)
+            subprocess.run(f"yes | brew install {' '.join(self.macOSExternPackages)}", check=True, shell=True)
             print("Successfully installed brew packages")
-        except subprocess.CalledProcessåError as e:
+        except subprocess.CalledProcessError as e:
             print(f"Faild to install brew packages: {e}")
+
+    def wingetInstall(self):
+        pass
 
     def checkDistro(self):
         if self.OS == "Linux":
@@ -167,17 +180,23 @@ class setup:
             subprocess.run(self.installCommand, check=True)
             return True
         except subprocess.CalledProcessError:
-            print(f"Failed to install packages with {self.pacMan}: {" ".join(self.linuxExternPackages)}")
+            print(f"Failed to install packages with {self.pacMan}: {' '.join(self.linuxExternPackages)}")
             return False
 
     def installPip(self, requirementsFile="requirements.txt"):
         try:
             pipInstall = ["pip3" if shutil.which("pip3") else "pip", "install", "-r", requirementsFile, "--break-system-packages"]
             print(pipInstall)
-            subprocess.run(pipInstall, check=True)
+            subprocess.run(" ".join(pipInstall), shell=True, check=True)
             return True
         except subprocess.CalledProcessError:
-            return False
+            try:
+                pipInstall = ["pip3" if shutil.which("pip3") else "pip", "install", "-r", requirementsFile]
+                print(pipInstall)
+                subprocess.run(" ".join(pipInstall), shell=True, check=True)
+                return True
+            except subprocess.CalledProcessError:
+                return False
     
     def config(self):
         providerQ = [provider for provider in self.providers]
@@ -231,6 +250,14 @@ class setup:
                 print(f"{key}: {payload[key]}")
             with open(".env", "w") as f:
                 f.write("\n".join(lines))
+
+    def gatherProviders(self):
+        from lib.puller import Puller
+        if not Path("providers/providers.json").exists():
+            Path("providers").mkdir(exist_ok=True, parents=True)
+            Puller("https://raw.githubusercontent.com/milo0622/Piston-AI/main/providers/providers.json", "providers/providers.json").pull()
+        with open("providers/providers.json", "r") as f:
+            self.providers = json.load(f)
 
 if __name__ == "__main__":
     s = setup()
