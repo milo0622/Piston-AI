@@ -14,7 +14,7 @@ A voiced AI assistant that makes life easier with the power of IoT!!
 
 ## Prerequisites
 
-- **Python 3.12+**
+- **Python 3.11+**
 - **Ollama** installed and running locally (Please install Ollama manually on Windows)
 - **Microphone access** required for voice mode
 
