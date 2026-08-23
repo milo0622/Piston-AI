@@ -97,8 +97,9 @@ class setup:
             print("Please run setup.py again with the latest version of Python.")
             sys.exit()
 
-        if not self.installPip():
-            print("Failed to install pip packages. Please install them manually.")
+        if not self.skipInstallation:
+            if not self.installPip():
+                print("Failed to install pip packages. Please install them manually.")
         else:
             self.questionary = importlib.import_module("questionary")
 
