@@ -7,8 +7,11 @@ import importlib
 import os
 import sys
 
+args = sys.argv[1:]
+
 class setup:
     def __init__(self):
+        self.skipInstallation = True if "--skip-installation" in args else False
         self.OS = "macOS" if platform.system() == "Darwin" else platform.system()
         self.arch = platform.machine()
         self.providers = None
@@ -79,15 +82,16 @@ class setup:
 
         self.windowsExternPackages = ["Ollama.Ollama"]
 
-        if self.OS == "Linux":
-            self.updateCommand, self.installCommand = self.checkDistro()
-            if self.updateCommand and self.installCommand:
-                self.update()
-                self.install(self.linuxExternPackages, self.linuxConditionalPackages)
-        elif self.OS == "macOS":
-            self.checkInstaller()
-        elif self.OS == "Windows":
-            self.wingetInstall()
+        if not self.skipInstallation:
+            if self.OS == "Linux":
+                self.updateCommand, self.installCommand = self.checkDistro()
+                if self.updateCommand and self.installCommand:
+                    self.update()
+                    self.install(self.linuxExternPackages, self.linuxConditionalPackages)
+            elif self.OS == "macOS":
+                self.checkInstaller()
+            elif self.OS == "Windows":
+                self.wingetInstall()
 
         if sys.version_info < (3, 11):
             print("Please run setup.py again with the latest version of Python.")

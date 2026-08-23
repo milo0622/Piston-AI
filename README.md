@@ -24,6 +24,12 @@ A voiced AI assistant that makes life easier with the power of IoT!!
 python3 setup.py
 ```
 
+To skip package installation (if you want to skip to configuration):
+```bash
+python3 setup.py --skip-installation
+```
+
+
 The interactive setup will:
 1. Detect your OS and install system dependencies (Ollama, xclip, xdotool on Linux; Ollama via Homebrew on macOS)
 2. Install Python packages from `requirements.txt`
