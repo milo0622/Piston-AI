@@ -18,3 +18,4 @@ python-dotenv
 questionary
 winrt.windows.foundation; sys_platform == "win32"
 winrt-Windows.Media.Control; sys_platform == "win32"
+pyperclip

@@ -6,7 +6,6 @@ if platform.system() == "Darwin":
     import Quartz
 import time
 import json
-from pynput.keyboard import Key, Controller
 import shutil
 
 class MediaControl:
@@ -14,8 +13,6 @@ class MediaControl:
         self.OS = platform.system() if platform.system() in ("Linux", "Windows") else "macOS"
         if self.OS == "Windows":
             from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager
-
-        self.Key = Controller()
 
     def mediaButton(self, action):
         if action == "pause":
