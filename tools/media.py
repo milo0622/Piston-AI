@@ -2,6 +2,8 @@ import asyncio
 import platform
 import subprocess
 import ctypes
+if platform.system() == "Windows":
+    from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager
 if platform.system() == "Darwin":
     import Quartz
 import time
@@ -11,8 +13,6 @@ import shutil
 class MediaControl:
     def __init__(self):
         self.OS = platform.system() if platform.system() in ("Linux", "Windows") else "macOS"
-        if self.OS == "Windows":
-            from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager
 
     def mediaButton(self, action):
         if action == "pause":
