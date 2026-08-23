@@ -133,7 +133,12 @@ class setup:
             print(f"Faild to install brew packages: {e}")
 
     def wingetInstall(self):
-        pass
+        try:
+            print("Installing packages...")
+            subprocess.run(f"winget install {" ".join(self.windowsExternPackages)} --accept-package-agreements --accept-source-agreements", shell=True, check=True)
+        except subprocess.CalledProcessError:
+            print("Failed to install winget packages. Please install manually")
+            return
 
     def checkDistro(self):
         if self.OS == "Linux":
