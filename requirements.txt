@@ -16,3 +16,5 @@ yt-dlp
 pyobjc-framework-Quartz; sys_platform == "darwin"
 python-dotenv
 questionary
+winrt.windows.foundation; sys_platform == "win32"
+winrt-Windows.Media.Control; sys_platform == "win32"

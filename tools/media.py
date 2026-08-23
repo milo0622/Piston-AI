@@ -1,3 +1,4 @@
+import asyncio
 import platform
 import subprocess
 import ctypes
@@ -6,10 +7,14 @@ if platform.system() == "Darwin":
 import time
 import json
 from pynput.keyboard import Key, Controller
+import shutil
 
 class MediaControl:
     def __init__(self):
         self.OS = platform.system() if platform.system() in ("Linux", "Windows") else "macOS"
+        if self.OS == "Windows":
+            from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager
+
         self.Key = Controller()
 
     def mediaButton(self, action):
@@ -45,6 +50,49 @@ class MediaControl:
                 subprocess.run(event)
             except subprocess.CalledProcessError:
                 pass
+
+    def parseMetadata(self):
+        if self.OS == "macOS":
+            if shutil.which("nowplaying-cli"):
+                try:
+                    result = subprocess.run("nowplaying-cli get --json title album artist", shell=True, check=True, capture_output=True)
+                    result = json.loads(result.stdout)
+
+                    if not result["title"] and not result["album"] and not result["artist"]:
+                        result = { "status": "No media is currently playing"}
+                except Exception as e:
+                    result =  { "status": f"Failed to fetch metadata currently playing: {e}" }
+                return result
+            else:
+                msg = "Please install nowplaying-cli via brew first"
+                print(msg)
+                return {
+                    "status": msg
+                }
+        elif self.OS == "Windows":
+            async def requestRemote():
+                manager =  await GlobalSystemMediaTransportControlsSessionManager.request_async()
+                session = manager.get_current_session()
+                if not session:
+                    return { "status": "No media currently playing" }
+                return await session.try_get_media_properties_async()
+            props = asyncio.run(requestRemote())
+            if isinstance(props, dict):
+                return props
+            if props:
+                return {
+                    "title": props.title,
+                    "artist": props.artist,
+                    "album": props.album_title
+                }
+            return {
+                "status": "No metadata found"
+            }
+        else:
+            return {
+                "status": f"The OS {self.OS} is not supported"
+            }
+
 def playpauseMedia():
     mc = MediaControl()
     try:
@@ -86,4 +134,9 @@ def previousTrack():
             "status":f"Failed to return to previous track: {e}"
         }
     return json.dumps(payload)
-    
+
+def fetchCurrentPlaying():
+    mc = MediaControl()
+    result = mc.parseMetadata()
+
+    return json.dumps(result)
