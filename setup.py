@@ -75,7 +75,7 @@ class setup:
             }
         ]
 
-        self.macOSExternPackages = ["ollama", "nowplaying-cli"]
+        self.macOSExternPackages = ["ollama", "nowplaying-cli", "python@3.14"]
 
         self.windowsExternPackages = ["Ollama.Ollama"]
 
@@ -91,6 +91,7 @@ class setup:
 
         if sys.version_info < (3, 11):
             print("Please run setup.py again with the latest version of Python.")
+            sys.exit()
 
         if not self.installPip():
             print("Failed to install pip packages. Please install them manually.")
