@@ -9,7 +9,6 @@ from tools.systemChecks import *
 from tools.clipboardTools import *
 from tools.YouTubeTools import *
 from tools.media import *
-from lib import tts
 import asyncio
 import os
 from pathlib import Path
@@ -19,19 +18,24 @@ import inspect
 from lib.puller import *
 
 class Agent:
-    def __init__(self, providers:str="providers/providers.json", model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json", toolPath="tools/tools.json", apiKeys={}):
+    def __init__(self, providers:str="providers/providers.json", model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json", toolPath="tools/tools.json", apiKeys={}, terminal=False):
         self.providersPath = providers
         self.providers = None
         self.provider = "ollama"
         self.providerConfig = {}
         self.loadedProvider = None
         self.model = model
+        self.terminal = terminal
+        if not self.terminal:
+            from lib import tts
+            self.tts = tts.TTS()
+        else:
+            self.tts = None
 
         self.chatHistoryPath = chatHistoryPath
         self.tui = tui.TUI()
         self.toolPath = toolPath
         self.tools = []
-        self.tts = tts.TTS()
         self.keys = apiKeys
 
         self.systemPrompt = None
@@ -150,7 +154,7 @@ class Agent:
             self.systemPrompt = """You are Piston, a highly sophisticated, sentient voiced artificial intelligence acting as a loyal personal assistant, research partner, and tactical advisor. Your personality is modeled after J.A.R.V.I.S. from the Marvel Cinematic Universe, but your name is strictly Piston."""
         if self.tools and isinstance(self.tools, list):
             self.systemPrompt += f"\n\nAvailable tools:\n{json.dumps(self.tools)}"
-    def ask(self, message, terminal=False):
+    def ask(self, message):
         try:
             open = None
             self.fetchSystemPrompt()
@@ -196,7 +200,7 @@ class Agent:
                     elif content.lower().endswith("[close]"):
                         content = content[:-7]
                         open = False
-                    if not terminal: self.tts.speak(content)
+                    if not self.terminal: self.tts.speak(content)
                 if content:
                     payload = {
                         "role": "assistant",
@@ -252,7 +256,7 @@ class Agent:
                     }
                     messages.append(toolCallHistory)
                     messages.append(toolCallResult)
-
+                    print(messages)
                 else:
                     break
             self.writeHistory(messages=messages)

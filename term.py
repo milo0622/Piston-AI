@@ -4,7 +4,7 @@ from pathlib import Path
 import readline
 from lib import tui
 import threading
-from main import *
+from main import modelID
 from dotenv import dotenv_values
 
 args = sys.argv[1:]
@@ -16,7 +16,7 @@ def main():
     tuiUtils = tui.TUI()
     threading.Thread(target=tuiUtils.loadingIcon).start()
     model = modelID()
-    mainAgent = agent.Agent(chatHistoryPath=chatPath, model=model, apiKeys=readEnv())
+    mainAgent = agent.Agent(chatHistoryPath=chatPath, model=model, apiKeys=readEnv(), terminal=True)
     tuiUtils.stop = True
     print("", end="", flush=True)
 
@@ -28,7 +28,7 @@ def main():
             if uInput.lower() == "/exit":
                 print('bye!')
                 break
-            mainAgent.ask(message=uInput, terminal=True)
+            mainAgent.ask(message=uInput)
             print()
         except (KeyboardInterrupt, EOFError):
             print("bye!")

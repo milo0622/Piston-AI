@@ -3,7 +3,8 @@ print("\033[3GImporting libraries...", end="\r")
 tempTui = tui.TUI()
 import threading
 threading.Thread(target=tempTui.loadingIcon).start()
-from lib import agent, stt, wakeword, SFX
+if __name__ == "__main__":
+    from lib import agent, stt, wakeword, SFX
 from pathlib import Path
 import json
 import os

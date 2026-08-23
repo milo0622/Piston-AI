@@ -151,5 +151,17 @@
                 }
             }
         }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"fetchCurrentPlaying",
+            "description":"Gets the current playing media", 
+            "parameters":{
+                "type":"object",
+                "properties": {
+                }
+            }
+        }
     }
 ]
