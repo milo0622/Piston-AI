@@ -3,7 +3,7 @@ import platform
 import subprocess
 import ctypes
 if platform.system() == "Windows":
-    from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager
+    from winrt.windows.media.control import GlobalSystemMediaTransportControlsSessionManager, GlobalSystemMediaTransportControlsSessionPlaybackStatus
 if platform.system() == "Darwin":
     import Quartz
 import time
@@ -55,6 +55,11 @@ class MediaControl:
                     result = subprocess.run("nowplaying-cli get --json title album artist", shell=True, check=True, capture_output=True)
                     result = json.loads(result.stdout)
 
+                    playing = subprocess.run("nowplaying-cli get playbackRate", shell=True, check=True, capture_output=True)
+                    playing = True if playing.stdout == 1 else False
+
+                    result["playing"] = playing
+                    
                     if not result["title"] and not result["album"] and not result["artist"]:
                         result = { "status": "No media is currently playing"}
                 except Exception as e:
@@ -71,16 +76,19 @@ class MediaControl:
                 manager =  await GlobalSystemMediaTransportControlsSessionManager.request_async()
                 session = manager.get_current_session()
                 if not session:
-                    return { "status": "No media currently playing" }
-                return await session.try_get_media_properties_async()
-            props = asyncio.run(requestRemote())
+                    return { "status": "No media currently playing" }, None
+                return await session.try_get_media_properties_async(), session
+            props, session = asyncio.run(requestRemote())
             if isinstance(props, dict):
                 return props
+            playing = session.get_playback_info().playback_status
+            playing = playing == GlobalSystemMediaTransportControlsSessionPlaybackStatus.PLAYING
             if props:
                 return {
                     "title": props.title,
                     "artist": props.artist,
-                    "album": props.album_title
+                    "album": props.album_title,
+                    "playing": playing
                 }
             return {
                 "status": "No metadata found"

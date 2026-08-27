@@ -155,7 +155,6 @@ class Agent:
         if self.tools and isinstance(self.tools, list):
             self.systemPrompt += f"\n\nAvailable tools:\n{json.dumps(self.tools)}"
     def ask(self, message):
-        try:
             open = None
             self.fetchSystemPrompt()
             messages = self.readHistory()
@@ -167,6 +166,7 @@ class Agent:
                 "role":"user",
                 "content":message
             })
+            self.writeHistory(messages)
             threading.Thread(target=self.tui.loadingIcon).start()
             while True:
                 stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, max_tokens=1000, tool_choice="auto")
@@ -201,13 +201,6 @@ class Agent:
                         content = content[:-7]
                         open = False
                     if not self.terminal: self.tts.speak(content)
-                if content:
-                    payload = {
-                        "role": "assistant",
-                        "content": content,
-                    }
-                    messages.append(payload)
-                    return open
                 if toolCalls:
                     print()
                     arg = []
@@ -234,6 +227,7 @@ class Agent:
                     }
                     toolCallHistory["tool_calls"].append(toolCall)
 
+                    print(toolCall)
                     try:
                         execute = globals()[toolCall["function"]["name"]]
                     except:
@@ -252,17 +246,21 @@ class Agent:
                         "role":"tool",
                         "tool_call_id": toolCall["id"],
                         "name": toolCall["function"]["name"],
-                        "content": json.dumps(result) if isinstance(result, str) else result
+                        "content": json.dumps(result) if not isinstance(result, str) else result
                     }
                     messages.append(toolCallHistory)
                     messages.append(toolCallResult)
-                    print(messages)
+                    self.writeHistory(messages)
                 else:
                     break
-            self.writeHistory(messages=messages)
-        except Exception as e:
-            print(f"Failed to ask agent: {e}")
-
+                if content:
+                    payload = {
+                        "role": "assistant",
+                        "content": content,
+                    }
+                    messages.append(payload)
+                    self.writeHistory(messages)
+                    return open
 
     def errorTool(self, toolName:str):
         return f"Failed to execute tool: {toolName}"
