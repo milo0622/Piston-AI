@@ -100,8 +100,7 @@ class setup:
         if not self.skipInstallation:
             if not self.installPip():
                 print("Failed to install pip packages. Please install them manually.")
-        else:
-            self.questionary = importlib.import_module("questionary")
+        self.questionary = importlib.import_module("questionary")
 
         self.gatherProviders()
         

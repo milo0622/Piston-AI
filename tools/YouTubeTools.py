@@ -1,6 +1,7 @@
 import webbrowser
 import json
 from yt_dlp import YoutubeDL
+from tools.media import *
 
 class YouTubeTools:
     def __init__(self, searchParams:str):
@@ -41,6 +42,10 @@ class YouTubeTools:
             if not "music.youtube.com" in url:
                 url = url.replace("youtube.com", "music.youtube.com")
             print(url)
+            result = json.loads(fetchCurrentPlaying())
+            print(result)
+            if result.get("playing", False):
+                pauseMedia()
             webbrowser.open(url)
             return {
                 "status":f"Playing {song.get("title", "")}"

@@ -177,20 +177,21 @@ class Agent:
                 for chunk in stream:
                     if hasattr(chunk.choices[0].delta, "reasoning_content") and chunk.choices[0].delta.reasoning_content:
                         if loading:
-                            print("Thinking:")
+                            print("Thinking: \033[37m")
                             self.tui.stop = True
                             thinking = True
                             loading = False
                         print(chunk.choices[0].delta.reasoning_content, end="", flush=True)
                     if chunk.choices[0].delta.content:
                         if thinking:
-                            print()
+                            print("Response: \n\033[92m")
                         thinking = False
                         self.tui.stop = True
                         print(chunk.choices[0].delta.content, end="", flush=True)
                         content += chunk.choices[0].delta.content
                     
                     if chunk.choices[0].delta.tool_calls:
+                        print("\033[0m")
                         self.tui.stop = True
                         toolCalls.append(chunk.choices[0].delta.tool_calls[0])
                 if content:
@@ -260,6 +261,7 @@ class Agent:
                     }
                     messages.append(payload)
                     self.writeHistory(messages)
+                    print("\033[0m")
                     return open
 
     def errorTool(self, toolName:str):

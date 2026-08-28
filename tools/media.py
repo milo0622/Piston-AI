@@ -16,24 +16,27 @@ class MediaControl:
 
     def mediaButton(self, action):
         if action == "pause":
-            keycode = 16
+            keycode = "nowplaying-cli pause"
             mediaBtn = 0xB3
-            event = "xdotool key XF86AudioPlay".split()
+            event = "xdotool key XF86AudioPlay"
+        elif action == "play":
+            keycode = "nowplaying-cli play"
+            mediaBtn = 0xB3
+            event = "xdotool key XF86AudioPlay"
         elif action == "next":
-            keycode = 17
+            keycode = "nowplaying-cli next"
             mediaBtn = 0xB0
-            event = "xdotool key XF86AudioNext".split()
+            event = "xdotool key XF86AudioNext"
         elif action == "previous":
-            keycode = 18
+            keycode = "nowplaying-cli previous"
             mediaBtn = 0xB1
-            event = "xdotool key XF86AudioPrev".split()
+            event = "xdotool key XF86AudioPrev"
 
         if self.OS == "macOS":
-            eventDown = Quartz.NSEvent.otherEventWithType_location_modifierFlags_timestamp_windowNumber_context_subtype_data1_data2_(14, (0,0), 0xa00, 0, 0, None, 8, (keycode << 16) | (0xa << 8), -1)
-            eventUp = Quartz.NSEvent.otherEventWithType_location_modifierFlags_timestamp_windowNumber_context_subtype_data1_data2_(14, (0, 0), 0xb00, 0, 0, None, 8, (keycode << 16) | (0xb << 8), -1)
-
-            Quartz.CGEventPost(Quartz.kCGHIDEventTap, eventDown.CGEvent())
-            Quartz.CGEventPost(Quartz.kCGHIDEventTap, eventUp.CGEvent())
+            try:
+                subprocess.run(keycode, shell=True)
+            except subprocess.CalledProcessError:
+                pass
         elif self.OS == "Windows":
             extendedKey = 0x0001
             keyup = 0x0002
@@ -44,7 +47,7 @@ class MediaControl:
             ctypes.windll.user32.keybd_event(mediaBtn, 0, extendedKey|keyup, 0)
         elif self.OS == "Linux":
             try:
-                subprocess.run(event)
+                subprocess.run(event, shell=True)
             except subprocess.CalledProcessError:
                 pass
 
@@ -55,8 +58,9 @@ class MediaControl:
                     result = subprocess.run("nowplaying-cli get --json title album artist", shell=True, check=True, capture_output=True)
                     result = json.loads(result.stdout)
 
-                    playing = subprocess.run("nowplaying-cli get playbackRate", shell=True, check=True, capture_output=True)
-                    playing = True if playing.stdout == 1 else False
+                    playing = subprocess.run("nowplaying-cli get playbackRate", shell=True, check=True, capture_output=True).stdout.decode("utf-8")
+                    print(playing)
+                    playing = True if playing else False
 
                     result["playing"] = playing
                     
@@ -98,7 +102,21 @@ class MediaControl:
                 "status": f"The OS {self.OS} is not supported"
             }
 
-def playpauseMedia():
+def playMedia():
+    mc = MediaControl()
+    try:
+        mc.mediaButton("play")
+        payload = {
+            "status":"Success"
+        }
+    except Exception as e:
+        print(f"Failed to play media: {e}")
+        payload = {
+            "status":f"Failed to play media: {e}"
+        }
+    return json.dumps(payload)
+
+def pauseMedia():
     mc = MediaControl()
     try:
         mc.mediaButton("pause")
@@ -106,11 +124,12 @@ def playpauseMedia():
             "status":"Success"
         }
     except Exception as e:
-        print(f"Failed to play/pause media: {e}")
+        print(f"Failed to pause media: {e}")
         payload = {
-            "status":f"Failed to play/pause media: {e}"
+            "status":f"Failed to pause media: {e}"
         }
     return json.dumps(payload)
+
 
 def nextTrack():
     mc = MediaControl()
@@ -140,7 +159,7 @@ def previousTrack():
         }
     return json.dumps(payload)
 
-def fetchCurrentPlaying():
+def fetchCurrentPlaying() -> str:
     mc = MediaControl()
     result = mc.parseMetadata()
 

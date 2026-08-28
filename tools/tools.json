@@ -119,8 +119,20 @@
     {
         "type":"function",
         "function":{
-            "name":"playpauseMedia",
-            "description":"Toggle play/pause of the media", 
+            "name":"playMedia",
+            "description":"Start playing media", 
+            "parameters":{
+                "type":"object",
+                "properties": {
+                }
+            }
+        }
+    },
+    {
+        "type":"function",
+        "function":{
+            "name":"pauseMedia",
+            "description":"Pause current playing media", 
             "parameters":{
                 "type":"object",
                 "properties": {
