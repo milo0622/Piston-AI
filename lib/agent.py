@@ -16,6 +16,7 @@ import importlib
 import asyncio
 import inspect
 from lib.puller import *
+import sys
 
 class Agent:
     def __init__(self, providers:str="providers/providers.json", model="llama3.1:8b", chatHistoryPath="userdata/chats/fallback.json", toolPath="tools/tools.json", apiKeys={}, terminal=False):
@@ -174,6 +175,7 @@ class Agent:
                 thinking = False
                 content = ""
                 toolCalls = []
+                thinkingContent = ""
                 for chunk in stream:
                     if hasattr(chunk.choices[0].delta, "reasoning_content") and chunk.choices[0].delta.reasoning_content:
                         if loading:
@@ -182,12 +184,13 @@ class Agent:
                             thinking = True
                             loading = False
                         print(chunk.choices[0].delta.reasoning_content, end="", flush=True)
+                        thinkingContent += chunk.choices[0].delta.reasoning_content
                     if chunk.choices[0].delta.content:
                         if thinking:
-                            print("Response: \n\033[92m")
+                            print("\n\033[92mResponse:\n")
                         thinking = False
                         self.tui.stop = True
-                        print(chunk.choices[0].delta.content, end="", flush=True)
+                        print(f"\033[92m{chunk.choices[0].delta.content}", end="", flush=True)
                         content += chunk.choices[0].delta.content
                     
                     if chunk.choices[0].delta.tool_calls:
@@ -254,15 +257,16 @@ class Agent:
                     self.writeHistory(messages)
                 else:
                     break
-                if content:
-                    payload = {
-                        "role": "assistant",
-                        "content": content,
-                    }
-                    messages.append(payload)
-                    self.writeHistory(messages)
-                    print("\033[0m")
-                    return open
+            sys.stdout.write("\033[0m")
+            sys.stdout.flush()
+            if content:
+                payload = {
+                    "role": "assistant",
+                    "content": content,
+                }
+                messages.append(payload)
+                self.writeHistory(messages)
+                return open
 
     def errorTool(self, toolName:str):
         return f"Failed to execute tool: {toolName}"
