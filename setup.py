@@ -60,7 +60,7 @@ class setup:
         
         self.sessionType = os.getenv("XDG_SESSION_TYPE", "")
 
-        self.linuxExternPackages = ["xclip", "ollama", "xdotool"]
+        self.linuxExternPackages = ["xclip", "ollama", "xdotool", "python3-pip"]
         self.linuxConditionalPackages = [
             {
                 "apt":"build-essential",
@@ -75,6 +75,13 @@ class setup:
                 "dnf":"python3-devel",
                 "apk":"python3-dev",
                 "zypper":"python314-devel"
+            },
+            {
+                "apt":"python3-pip",
+                "pacman":"python-pip",
+                "dnf":"python3-pip",
+                "apk":"py3-pip",
+                "zypper":"python3-pip"
             }
         ]
 
@@ -195,7 +202,7 @@ class setup:
 
     def installPip(self, requirementsFile="requirements.txt"):
         try:
-            pipInstall = ["pip3" if shutil.which("pip3") else "pip", "install", "-r", requirementsFile, "--break-system-packages"]
+            pipInstall = ["python3" if shutil.which("python3") else "python","-m","pip","install", "-r", requirementsFile, "--break-system-packages"]
             print(pipInstall)
             subprocess.run(" ".join(pipInstall), shell=True, check=True)
             return True
