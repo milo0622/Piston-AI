@@ -221,6 +221,7 @@ class setup:
             modelAns = self.questionary.text("Select a model (Leave blank if no preference): ").ask().strip()
             if not modelAns.strip():
                 modelAns = "gemma4:e4b"
+            
         else:
             apiQ = ["I have an API key", "Not suitable"]
             apiSelAns = self.questionary.select("Does this provider need an API key?", choices=apiQ).ask().strip()

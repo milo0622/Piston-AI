@@ -87,7 +87,7 @@ class STT:
                 audio_buffer.append(flat_chunk)
                 full_audio_data = np.concatenate(audio_buffer)
 
-                segments, _ = model.transcribe(full_audio_data, beam_size=2, initial_prompt="Piston")
+                segments, _ = model.transcribe(full_audio_data, beam_size=2, initial_prompt="Piston", no_speech_threshold=0.6)
                 text_output = "".join([segment.text for segment in segments])
 
                 sys.stdout.write(f"\r\033[2K{text_output}")
@@ -101,7 +101,10 @@ class STT:
             exitType = "timeout"
         else:
             exitType = "normal"
-        return text_output, exitType
+        try:
+            return text_output, exitType
+        except:
+            return None
 
 if __name__ == "__main__":
     stt = STT()

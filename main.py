@@ -30,7 +30,7 @@ class Piston:
         self.tui.stop = True
         print("√")
         self.stt = stt.STT()
-        self.wakeword = wakeword.Wakeword(threshold=0.67)
+        self.wakeword = wakeword.Wakeword(threshold=0.6)
         if not self.wakeword.loadModel:
             print("Failed to load wakeword. Fallback to manual mode.")
             self.wakewordSuccess = False
@@ -55,6 +55,8 @@ class Piston:
                 self.sfx.playSound(1, blocking=False)
                 text, _ = self.stt.main(3)
                 self.sfx.playSound(2, blocking=False)
+                if text is None:
+                    continue
                 if text.strip().rstrip():
                     try:
                         self.open = self.agent.ask(message=text)

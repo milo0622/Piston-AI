@@ -163,6 +163,9 @@ class Agent:
                 "role":"system",
                 "content":self.systemPrompt
             })
+            if len(messages) > 1:
+                if messages[-1].get("role", None).lower() == "user":
+                    messages.pop()
             messages.append({
                 "role":"user",
                 "content":message

@@ -63,7 +63,7 @@ python3 term.py
 Resume a previous conversation:
 
 ```bash
-python3 term.py myconversation.json
+python3 term.py
 ```
 
 ## Available Tools
@@ -84,6 +84,7 @@ Piston can call the following tools through LLM function calling:
 | `playpauseMedia`        | Toggle media play/pause                     |
 | `nexTrack`              | Skip to next track                          |
 | `previousTrack`         | Return to previous track                    |
+| `fetchCurrentPlaying`   | Returns the current playing media           |
 
 ## Configuration
 
