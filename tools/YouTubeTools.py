@@ -1,46 +1,26 @@
 import webbrowser
 import json
-from yt_dlp import YoutubeDL
 from tools.media import *
+from ytmusicapi import YTMusic
 
 class YouTubeTools:
     def __init__(self, searchParams:str):
-        self.ytdlpOpts = {
-            "extract_flat":True,
-            "skip_download":True,
-            "quiet":True
-        }
-        if searchParams.startswith("https://") and searchParams.startswith("http://"):
-            self.query = searchParams
-        else:
-            self.query = f"ytsearch:{searchParams}"
+        self.searchParams = searchParams
+        self.yt = YTMusic()
 
     def extractInfo(self):
-        print(f"Searching song '{self.query}'")
-        with YoutubeDL(self.ytdlpOpts) as ydl:
-            try:
-                result = ydl.extract_info(self.query, download=False)
-                if "entries" in result and result.get("entries", None):
-                    videoData = result["entries"][0]
+        print(f"Searching song '{self.searchParams}'")
+        results = self.yt.search(self.searchParams)
 
-                    return {
-                        "title":videoData.get("title", ""),
-                        "streamURL": videoData.get("url", ""),
-                        "status":"Success"
-                    }
-            except Exception as e:
-                print(f"Failed to extract info: {e}")
-                return {
-                    "status":f"Failed to extract info: {e}"
-                }
-
+        for song in results:
+            if song.get("resultType", None) == "song":
+                return song
+        return results[0]
     def main(self):
         song = self.extractInfo()
-        if song.get("title", "") and song.get("streamURL", ""):
-            url = song.get("streamURL", "")
-            url = url.replace("www.youtube.com", "music.youtube.com")
-            if not "music.youtube.com" in url:
-                url = url.replace("youtube.com", "music.youtube.com")
+        if song.get("title", "") and song.get("videoId", ""):
+            vidId = song.get("videoId", "")
+            url = f"https://music.youtube.com/watch?v={vidId}"
             print(url)
             result = json.loads(fetchCurrentPlaying())
             print(result)
@@ -51,7 +31,7 @@ class YouTubeTools:
                 "status":f"Playing {song.get("title", "")}"
             }
         return {
-            "status":f"Failed to play {self.query}"
+            "status":f"Failed to play {self.searchParams}"
         }
 
 def playSong(query:str):
@@ -59,3 +39,4 @@ def playSong(query:str):
     yt = YouTubeTools(query)
     result = yt.main()
     return json.dumps(result)
+
