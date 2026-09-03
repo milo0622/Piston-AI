@@ -60,7 +60,7 @@ class setup:
         
         self.sessionType = os.getenv("XDG_SESSION_TYPE", "")
 
-        self.linuxExternPackages = ["xclip", "ollama", "xdotool", "python3-pip"]
+        self.linuxExternPackages = ["xclip", "xdotool", "python3-pip"]
         self.linuxConditionalPackages = [
             {
                 "apt":"build-essential",
@@ -85,6 +85,8 @@ class setup:
             }
         ]
 
+        self.linuxExtraCommands = {"Ollama execution":"curl -fsSL https://ollama.com/install.sh | sh"}
+
         self.macOSExternPackages = ["ollama", "nowplaying-cli", "python@3.14"]
 
         self.windowsExternPackages = ["Ollama.Ollama"]
@@ -95,6 +97,8 @@ class setup:
                 if self.updateCommand and self.installCommand:
                     self.update()
                     self.install(self.linuxExternPackages, self.linuxConditionalPackages)
+                self.executeCommands()
+                    
             elif self.OS == "macOS":
                 self.checkInstaller()
             elif self.OS == "Windows":
@@ -110,7 +114,18 @@ class setup:
         self.questionary = importlib.import_module("questionary")
 
         self.gatherProviders()
-        
+
+    def executeCommands(self):
+        temp = ""
+        try:
+            print("Executing commands")
+            for index in self.linuxExtraCommands:
+                temp = self.linuxExtraCommands[index]
+                print(f"Executing {index}...")
+                subprocess.run(self.linuxExtraCommands[index], shell=True, check=True)
+        except subprocess.CalledProcessError:
+            print(f"Failed to execute command: {temp}")
+
     def checkInstaller(self):
         evalCmd = 'eval "$(/opt/homebrew/bin/brew shellenv)"' if self.arch == "arm64" else 'eval "$(/usr/local/bin/brew shellenv)"'
         if self.OS == "macOS":
