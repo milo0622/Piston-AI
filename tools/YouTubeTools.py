@@ -1,4 +1,3 @@
-from this import d
 import webbrowser
 import json
 from tools.media import *
