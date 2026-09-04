@@ -207,6 +207,7 @@ class Agent:
                     elif content.lower().endswith("[close]"):
                         content = content[:-7]
                         open = False
+                    content.replace("*", "")
                     if not self.terminal: self.tts.speak(content)
                 if toolCalls:
                     print()
