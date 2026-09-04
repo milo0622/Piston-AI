@@ -167,7 +167,8 @@ class Agent:
             })
             self.writeHistory(messages)
             threading.Thread(target=self.tui.loadingIcon).start()
-            while True:
+            while True: 
+                open = False
                 if self.debug: print(messages)
                 stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, max_tokens=1000, tool_choice="auto")
                 loading = True
