@@ -15,7 +15,7 @@ print("√")
 
 args = sys.argv[1:]
 
-class Piston:   
+class Piston:
     def __init__(self, chatHistoryPath="userdata/chats/fallback.json"):
         print("\033[3GInit...", end="\r")
         self.tui = tui.TUI()
@@ -30,7 +30,7 @@ class Piston:
         self.tui.stop = True
         print("√")
         self.stt = stt.STT()
-        self.wakeword = wakeword.Wakeword(threshold=0.98)
+        self.wakeword = wakeword.Wakeword(threshold=0.9)
         if not self.wakeword.loadModel:
             print("Failed to load wakeword. Fallback to manual mode.")
             self.wakewordSuccess = False
@@ -39,9 +39,12 @@ class Piston:
         if "-m" in args:
             print("Manual mode enabled.")
             self.wakewordSuccess = False
+        if "--debug" in args or "-d" in args:
+            print("Debug mode enabled")
+            self.wakeword.debug = True
         self.open = False
         self.sfx.playSound(0, blocking=True)
-            
+
     def main(self):
         print("Welcome to Piston AI!")
         try:
@@ -71,7 +74,7 @@ class Piston:
         except (KeyboardInterrupt, EOFError):
             self.tui.stop = True
             print("Bye!")
-            sys.exit()  
+            sys.exit()
 
     def readDotEnv(self):
         self.apiKeys = {}

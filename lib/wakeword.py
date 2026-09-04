@@ -22,6 +22,8 @@ class Wakeword:
             self.modelName = None
 
             self.modelLoad = self.loadModel()
+
+            self.debug = False
         except: self.tui.loadingIcon = True
 
     def loadModel(self):
@@ -75,6 +77,8 @@ class Wakeword:
 
                 scores = self.model.prediction_buffer[self.modelName]
                 currentScore = scores[-1]
+                if self.debug:
+                    print(currentScore)
                 if currentScore >= self.threshold:
                     print(f"Wakeword triggered, score: {currentScore}")
                     self.model.reset()
