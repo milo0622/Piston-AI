@@ -39,11 +39,10 @@ class Agent:
         self.tools = []
         self.keys = apiKeys
 
-        self.systemPrompt = None
-        
         self.checkProviders()
         self.fetchTools()
-        self.fetchSystemPrompt()
+
+        self.debug = False
 
     def checkProviders(self):
         url = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/providers/providers.json"
@@ -105,13 +104,9 @@ class Agent:
                 json.dump([], f, indent=4)
 
     def writeHistory(self, messages:list[dict]):
-        for message in messages:
-            if message.get("role", "") == "system":
-                messages.remove(message)
-                break
-            else: continue
+        buffer = [message for message in messages if message.get("role") != "system"]
         with open(self.chatHistoryPath, "w") as f:
-            json.dump(messages, f, indent=4)
+            json.dump(buffer, f, indent=4)
 
     def readHistory(self):
         self.verifyHistoryPath()
@@ -144,28 +139,28 @@ class Agent:
         sysPromptPath = "lib/systemPrompt.txt"
         url = "https://raw.githubusercontent.com/milo0622/Piston-AI/main/lib/systemPrompt.txt"
         Path(os.path.dirname(sysPromptPath)).mkdir(parents=True, exist_ok=True)
+        systemPrompt = ""
 
         try:
             if not Path(sysPromptPath).exists():
                 Puller(url, outputPath=sysPromptPath).pull()
             with open(sysPromptPath, "r") as f:
-                self.systemPrompt = f.read()
+                systemPrompt = f.read()
         except Exception as e:
             print("Failed to obtain system prompt: {e}")
-            self.systemPrompt = """You are Piston, a highly sophisticated, sentient voiced artificial intelligence acting as a loyal personal assistant, research partner, and tactical advisor. Your personality is modeled after J.A.R.V.I.S. from the Marvel Cinematic Universe, but your name is strictly Piston."""
+            systemPrompt = """You are Piston, a highly sophisticated, sentient voiced artificial intelligence acting as a loyal personal assistant, research partner, and tactical advisor. Your personality is modeled after J.A.R.V.I.S. from the Marvel Cinematic Universe, but your name is strictly Piston."""
         if self.tools and isinstance(self.tools, list):
-            self.systemPrompt += f"\n\nAvailable tools:\n{json.dumps(self.tools)}"
+            systemPrompt += f"\n\nAvailable tools:\n{json.dumps(self.tools)}"
+        return systemPrompt
+
     def ask(self, message):
             open = None
             self.fetchSystemPrompt()
             messages = self.readHistory()
             messages.insert(0, {
                 "role":"system",
-                "content":self.systemPrompt
+                "content":self.fetchSystemPrompt()
             })
-            if len(messages) > 1:
-                if messages[-1].get("role", None).lower() == "user":
-                    messages.pop()
             messages.append({
                 "role":"user",
                 "content":message
@@ -173,6 +168,7 @@ class Agent:
             self.writeHistory(messages)
             threading.Thread(target=self.tui.loadingIcon).start()
             while True:
+                if self.debug: print(messages)
                 stream = completion(model=f"openai/{self.model}", stream=True, base_url=f"{self.baseURL}{self.endpoint}", api_key=self.api, messages=messages, tools=self.tools, max_tokens=1000, tool_choice="auto")
                 loading = True
                 thinking = False
@@ -195,7 +191,7 @@ class Agent:
                         self.tui.stop = True
                         print(f"\033[92m{chunk.choices[0].delta.content}", end="", flush=True)
                         content += chunk.choices[0].delta.content
-                    
+
                     if chunk.choices[0].delta.tool_calls:
                         print("\033[0m")
                         self.tui.stop = True
@@ -204,10 +200,22 @@ class Agent:
                     if content.lower().endswith("[open]"):
                         content = content[:-6]
                         open = True
+                        break
                     elif content.lower().endswith("[close]"):
                         content = content[:-7]
                         open = False
+                        break
                     content.replace("*", "")
+                    if self.debug:
+                        Path("debug/").mkdir(exist_ok=True, parents=True)
+                        with open("debug/content.json", "r") as f:
+                            try:
+                                debug = json.load(f)
+                                debug.append(content)
+                                with open("debug/content.json", "w") as fw:
+                                    json.dump(fw, debug, indent=4)
+                            except json.JSONDecodeError:
+                                print("Failed to parse debug JSON")
                     if not self.terminal: self.tts.speak(content)
                 if toolCalls:
                     print()
@@ -229,11 +237,13 @@ class Agent:
                     toolCall["function"]["arguments"] = ("".join(arg))
 
                     toolCallHistory = {
-                        "role":"assistant", 
+                        "role":"assistant",
                         "content":None,
                         "tool_calls": []
                     }
                     toolCallHistory["tool_calls"].append(toolCall)
+                    messages.append(toolCallHistory)
+                    self.writeHistory(messages)
 
                     print(toolCall)
                     try:
@@ -256,11 +266,8 @@ class Agent:
                         "name": toolCall["function"]["name"],
                         "content": json.dumps(result) if not isinstance(result, str) else result
                     }
-                    messages.append(toolCallHistory)
                     messages.append(toolCallResult)
                     self.writeHistory(messages)
-                else:
-                    break
             sys.stdout.write("\033[0m")
             sys.stdout.flush()
             if content:

@@ -42,6 +42,7 @@ class Piston:
         if "--debug" in args or "-d" in args:
             print("Debug mode enabled")
             self.wakeword.debug = True
+            self.agent.debug = True
         self.open = False
         self.sfx.playSound(0, blocking=True)
 

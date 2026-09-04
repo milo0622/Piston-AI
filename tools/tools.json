@@ -3,7 +3,7 @@
         "type":"function",
         "function":{
             "name":"fetchWeather",
-            "description":"Fetches real-time weather. No parameters should be provided.", 
+            "description":"Fetches real-time weather. No parameters should be provided.",
             "parameters":{
                 "type":"object",
                 "properties": {}
@@ -14,7 +14,7 @@
         "type":"function",
         "function":{
             "name":"healthCheck",
-            "description":"Performs a health and status check on the status, including CPU usage, memory usage, battery health, etc.", 
+            "description":"Performs a health and status check on the status, including CPU usage, memory usage, battery health, etc.",
             "parameters":{
                 "type":"object",
                 "properties": {}
@@ -25,7 +25,7 @@
         "type":"function",
         "function":{
             "name":"systemSpecs",
-            "description":"Returns the specifications of the current system, including OS, CPU mode, memory size, etc.", 
+            "description":"Returns the specifications of the current system, including OS, CPU mode, memory size, etc.",
             "parameters":{
                 "type":"object",
                 "properties": {}
@@ -36,7 +36,7 @@
         "type":"function",
         "function":{
             "name":"readTextFromClipboard",
-            "description":"Returns the contents of the clipboard", 
+            "description":"Returns the contents of the clipboard",
             "parameters":{
                 "type":"object",
                 "properties": {}
@@ -47,7 +47,7 @@
         "type":"function",
         "function":{
             "name":"writeTextToClipboard",
-            "description":"Write text to clipboard (copy text). STRICTLY REQUIRED ARGUMENT: 'text' (string)", 
+            "description":"Write text to clipboard (copy text). STRICTLY REQUIRED ARGUMENT: 'text' (string)",
             "parameters":{
                 "type":"object",
                 "properties": {
@@ -64,7 +64,7 @@
         "type":"function",
         "function":{
             "name":"fullCheck",
-            "description":"This function fully checks the system's health, including: health, specifications and connectivity.", 
+            "description":"This function fully checks the system's health, including: health, specifications and connectivity.",
             "parameters":{
                 "type":"object",
                 "properties": {}
@@ -75,7 +75,7 @@
         "type":"function",
         "function":{
             "name":"connectivityCheck",
-            "description":"This function checks ths connectivity and network of the device.", 
+            "description":"This function checks ths connectivity and network of the device.",
             "parameters":{
                 "type":"object",
                 "properties": {}
@@ -86,7 +86,7 @@
         "type":"function",
         "function":{
             "name":"playSong",
-            "description":"Searches and plays song in YouTube Music", 
+            "description":"Searches and plays song in YouTube Music",
             "parameters":{
                 "type":"object",
                 "properties": {
@@ -103,7 +103,7 @@
         "type":"function",
         "function":{
             "name":"webSearch",
-            "description":"Searches the web for real-time data", 
+            "description":"Searches the web for real-time data",
             "parameters":{
                 "type":"object",
                 "properties": {
@@ -120,7 +120,7 @@
         "type":"function",
         "function":{
             "name":"playMedia",
-            "description":"Start playing media", 
+            "description":"Start playing media",
             "parameters":{
                 "type":"object",
                 "properties": {
@@ -132,7 +132,7 @@
         "type":"function",
         "function":{
             "name":"pauseMedia",
-            "description":"Pause current playing media", 
+            "description":"Pause current playing media",
             "parameters":{
                 "type":"object",
                 "properties": {
@@ -144,7 +144,7 @@
         "type":"function",
         "function":{
             "name":"nexTrack",
-            "description":"Skips to next track of the media", 
+            "description":"Skips to next track of the media",
             "parameters":{
                 "type":"object",
                 "properties": {
@@ -156,7 +156,7 @@
         "type":"function",
         "function":{
             "name":"previousTrack",
-            "description":"Returns to previous track of the media", 
+            "description":"Returns to previous track of the media",
             "parameters":{
                 "type":"object",
                 "properties": {
@@ -168,12 +168,29 @@
         "type":"function",
         "function":{
             "name":"fetchCurrentPlaying",
-            "description":"Gets the current playing media", 
+            "description":"Gets the current playing media",
             "parameters":{
                 "type":"object",
                 "properties": {
                 }
             }
         }
+    },
+    {
+      "type":"function",
+      "function": {
+        "name":"startRadio",
+        "description":"Searches and starts radio with the searched song in YouTube Music",
+        "parameters":{
+            "type":"object",
+            "properties": {
+                "query":{
+                    "type":"string",
+                    "description":"The search query for the target song"
+                }
+            },
+            "required":["query"]
+        }
+      }
     }
 ]
